@@ -1,0 +1,19 @@
+{
+  "name": "closelogic",
+  "version": "1.0.0",
+  "description": "CloseLogic - Real Estate CRM with AI-powered lead analysis",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.x"
+  }
+}
+

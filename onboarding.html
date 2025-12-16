@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to CloseLogic - Setup</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="onboarding.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+                    <span class="logo-icon">C</span>
+                    <span class="logo-text">CloseLogic</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Onboarding Container -->
+    <section class="onboarding-section">
+        <div class="container">
+            <div class="onboarding-container">
+                <!-- Progress Indicator -->
+                <div class="progress-indicator">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-text">
+                        <span id="currentStep">1</span> of <span id="totalSteps">4</span>
+                    </p>
+                </div>
+
+                <!-- Step 1: Lead Volume -->
+                <div class="onboarding-step active" data-step="1">
+                    <div class="step-content">
+                        <h2>How many leads do you typically handle per month?</h2>
+                        <p class="step-subtitle">This helps us personalize your lead scoring experience.</p>
+                        <div class="options-grid">
+                            <button class="option-card" data-value="0-25">
+                                <span class="option-label">0–25</span>
+                                <span class="option-description">Just getting started</span>
+                            </button>
+                            <button class="option-card" data-value="25-100">
+                                <span class="option-label">25–100</span>
+                                <span class="option-description">Growing your business</span>
+                            </button>
+                            <button class="option-card" data-value="100-250">
+                                <span class="option-label">100–250</span>
+                                <span class="option-description">Busy agent</span>
+                            </button>
+                            <button class="option-card" data-value="250+">
+                                <span class="option-label">250+</span>
+                                <span class="option-description">High volume</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Primary Goal -->
+                <div class="onboarding-step" data-step="2">
+                    <div class="step-content">
+                        <h2>What are you most focused on improving right now?</h2>
+                        <p class="step-subtitle">We'll tailor recommendations to help you achieve this.</p>
+                        <div class="options-grid">
+                            <button class="option-card" data-value="closing-more-deals">
+                                <span class="option-label">Closing more deals</span>
+                                <span class="option-description">Increase conversion rate</span>
+                            </button>
+                            <button class="option-card" data-value="responding-faster">
+                                <span class="option-label">Responding faster</span>
+                                <span class="option-description">Reduce response time</span>
+                            </button>
+                            <button class="option-card" data-value="prioritizing-leads">
+                                <span class="option-label">Prioritizing the right leads</span>
+                                <span class="option-description">Focus on high-intent prospects</span>
+                            </button>
+                            <button class="option-card" data-value="reducing-overwhelm">
+                                <span class="option-label">Reducing inbox overwhelm</span>
+                                <span class="option-description">Better email management</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Communication Style -->
+                <div class="onboarding-step" data-step="3">
+                    <div class="step-content">
+                        <h2>How would you describe your communication style with clients?</h2>
+                        <p class="step-subtitle">This helps us match the tone of AI-generated replies.</p>
+                        <div class="options-grid">
+                            <button class="option-card" data-value="friendly-conversational">
+                                <span class="option-label">Friendly & conversational</span>
+                                <span class="option-description">Casual and approachable</span>
+                            </button>
+                            <button class="option-card" data-value="professional-direct">
+                                <span class="option-label">Professional & direct</span>
+                                <span class="option-description">Clear and business-focused</span>
+                            </button>
+                            <button class="option-card" data-value="warm-supportive">
+                                <span class="option-label">Warm & supportive</span>
+                                <span class="option-description">Empathetic and helpful</span>
+                            </button>
+                            <button class="option-card" data-value="short-efficient">
+                                <span class="option-label">Short & efficient</span>
+                                <span class="option-description">Brief and to the point</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Email Connection -->
+                <div class="onboarding-step" data-step="4">
+                    <div class="step-content">
+                        <h2>Connect your Gmail inbox</h2>
+                        <p class="step-subtitle">CloseLogic uses this information to personalize lead scoring and recommendations to match how you work.</p>
+                        <div class="email-connection-card">
+                            <div class="email-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="L22 6L12 13L2 6" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h3>Gmail</h3>
+                            <p>Connect your Gmail account to get started</p>
+                            <button class="btn btn-primary btn-large" id="connectGmailBtn">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right: 8px;">
+                                    <path d="M18 8H20C21.1 8 22 8.9 22 10V20C22 21.1 21.1 22 20 22H4C2.9 22 2 21.1 2 20V10C2 8.9 2.9 8 4 8H6M14 2L10 6M10 6L14 10M10 6H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                Connect Gmail
+                            </button>
+                            <p class="privacy-note">We only access emails needed for lead scoring. Your data is secure and encrypted.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading State -->
+                <div class="onboarding-step loading-state" data-step="loading">
+                    <div class="step-content">
+                        <div class="loading-spinner"></div>
+                        <h2>Analyzing your inbox and personalizing your dashboard…</h2>
+                        <p class="step-subtitle">This will only take a moment.</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Buttons (hidden, no skip allowed) -->
+                <div class="step-navigation" style="display: none;">
+                    <!-- No skip button as per requirements -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>About</h4>
+                        <a href="#">Our Story</a>
+                        <a href="#">Team</a>
+                        <a href="#">Careers</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="#">Documentation</a>
+                        <a href="#">API Reference</a>
+                        <a href="#">Guides</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Support</h4>
+                        <a href="#">Help Center</a>
+                        <a href="#">Contact Us</a>
+                        <a href="#">Status</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Follow Us</h4>
+                        <a href="#">Twitter</a>
+                        <a href="#">LinkedIn</a>
+                        <a href="#">Facebook</a>
+                    </div>
+                </div>
+                <div class="footer-copyright">
+                    <p>©2024 CloseLogic. All rights reserved.</p>
+                    <div class="footer-social">
+                        <span class="social-icon"></span>
+                        <span class="social-icon"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="onboarding.js"></script>
+</body>
+</html>
+

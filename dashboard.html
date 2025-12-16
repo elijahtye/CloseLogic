@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CloseLogic</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="top-bar-content">
+            <div class="top-bar-left">
+                <div class="dashboard-logo">
+                    <span class="logo-icon">C</span>
+                    <span class="logo-text">CloseLogic</span>
+                </div>
+                <h1 class="page-title">Dashboard</h1>
+            </div>
+            <div class="top-bar-center">
+                <div class="date-range-selector">
+                    <button class="date-range-btn active" data-range="7D">7D</button>
+                    <button class="date-range-btn" data-range="30D">30D</button>
+                    <button class="date-range-btn" data-range="90D">90D</button>
+                </div>
+            </div>
+            <div class="top-bar-right">
+                <button class="btn btn-primary btn-small" id="syncInboxBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21.5 2V6H17.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2.5 22V18H6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21.5 6C20.57 4.14 18.99 2.71 17.05 2.04C15.11 1.37 13.01 1.5 11.15 2.43C9.29 3.36 7.86 4.94 7.19 6.88C6.52 8.82 6.65 10.92 7.58 12.78L2.5 17.86" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M21.5 6L17.5 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2.5 18L6.5 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2.5 18C3.43 19.86 5.01 21.29 6.95 21.96C8.89 22.63 10.99 22.5 12.85 21.57C14.71 20.64 16.14 19.06 16.81 17.12C17.48 15.18 17.35 13.08 16.42 11.22L21.5 6.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Sync Inbox
+                </button>
+                <div class="user-menu">
+                    <button class="user-menu-btn" id="userMenuBtn">
+                        <div class="user-avatar"></div>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <div class="user-menu-dropdown" id="userMenuDropdown">
+                        <a href="#" class="user-menu-item">Profile</a>
+                        <a href="#" class="user-menu-item">Settings</a>
+                        <hr class="user-menu-divider">
+                        <a href="index.html" class="user-menu-item">Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Dashboard Main Content -->
+    <main class="dashboard-main">
+        <div class="dashboard-container">
+            <!-- Executive Overview Section -->
+            <section class="executive-overview">
+                <!-- KPI Cards -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Hot Leads</div>
+                        <div class="kpi-value" id="kpiHotLeads">0</div>
+                        <div class="kpi-trend" id="kpiHotLeadsTrend">
+                            <span class="trend-icon">↑</span>
+                            <span class="trend-text">+12%</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Avg Response Time</div>
+                        <div class="kpi-value" id="kpiResponseTime">0</div>
+                        <div class="kpi-unit">minutes</div>
+                        <div class="kpi-trend" id="kpiResponseTimeTrend">
+                            <span class="trend-icon">↓</span>
+                            <span class="trend-text">-8%</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Follow-ups Due</div>
+                        <div class="kpi-value" id="kpiFollowups">0</div>
+                        <div class="kpi-trend" id="kpiFollowupsTrend">
+                            <span class="trend-icon">↑</span>
+                            <span class="trend-text">+5</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Pipeline Value</div>
+                        <div class="kpi-value" id="kpiPipelineValue">$0</div>
+                        <div class="kpi-trend" id="kpiPipelineValueTrend">
+                            <span class="trend-icon">↑</span>
+                            <span class="trend-text">+18%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Lead Momentum</h3>
+                            <span class="chart-subtitle">Over time</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="leadMomentumChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Pipeline Mix</h3>
+                            <span class="chart-subtitle">Hot / Warm / Cold</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="pipelineMixChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Content Tabs -->
+            <div class="content-tabs">
+                <button class="content-tab active" data-tab="overview">Overview</button>
+                <button class="content-tab" data-tab="performance">Performance</button>
+            </div>
+
+            <!-- Overview Tab Content -->
+            <div class="tab-content active" id="overviewTab">
+                <div class="main-content-grid">
+                    <!-- Pipeline Column (Left) -->
+                    <aside class="pipeline-panel">
+                        <div class="pipeline-header">
+                            <h2>Pipeline</h2>
+                            <div class="pipeline-filters">
+                                <div class="filter-buttons">
+                                    <button class="filter-btn active" data-filter="all">All</button>
+                                    <button class="filter-btn" data-filter="hot">Hot</button>
+                                    <button class="filter-btn" data-filter="warm">Warm</button>
+                                    <button class="filter-btn" data-filter="cold">Cold</button>
+                                </div>
+                                <div class="filter-toggle">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" id="followupToggle">
+                                        <span>Needs Follow-up</span>
+                                    </label>
+                                </div>
+                                <div class="search-bar">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                                        <path d="M21 21L16.65 16.65" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    </svg>
+                                    <input type="text" id="leadSearch" placeholder="Search leads...">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="pipeline-list" id="leadList">
+                            <!-- Lead cards will be inserted here -->
+                        </div>
+                        <div class="empty-state" id="emptyState" style="display: none;">
+                            <div class="empty-state-icon">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    <path d="L22 6L12 13L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h3>No leads found</h3>
+                            <p>Connect your Gmail to start tracking leads</p>
+                            <button class="btn btn-primary" id="connectGmailEmptyBtn">Connect Gmail</button>
+                        </div>
+                    </aside>
+
+                    <!-- Lead Intelligence Column (Right) -->
+                    <section class="intelligence-panel" id="leadDetailPanel">
+                        <div class="detail-empty-state" id="detailEmptyState">
+                            <div class="empty-icon">📊</div>
+                            <p>Select a lead to view intelligence</p>
+                        </div>
+
+                        <div class="intelligence-content" id="leadDetailContent" style="display: none;">
+                            <!-- Lead Header -->
+                            <div class="intelligence-header">
+                                <div class="lead-info">
+                                    <h2 id="leadDetailName">Loading...</h2>
+                                    <p id="leadDetailEmail" class="lead-email">Loading...</p>
+                                </div>
+                                <div class="lead-badges">
+                                    <div class="score-badge-wrapper">
+                                        <span class="score-badge" id="leadDetailScore">-</span>
+                                        <button class="score-help-btn" id="scoreHelpBtn" title="Why this score?">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                                <path d="M9 9C9 7.343 10.343 6 12 6C13.657 6 15 7.343 15 9C15 10.657 13.657 12 12 12V14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                                <path d="M12 18H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <span class="confidence-badge" id="leadDetailConfidence">-</span>
+                                </div>
+                            </div>
+
+                            <!-- Score Explanation Tooltip -->
+                            <div class="score-tooltip" id="scoreTooltip" style="display: none;">
+                                <div class="tooltip-content">
+                                    <button class="tooltip-close" id="tooltipClose">&times;</button>
+                                    <h4>Why this score?</h4>
+                                    <ul class="score-explanation-list" id="scoreExplanation">
+                                        <li>Loading explanation...</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Deal Probability -->
+                            <div class="intelligence-section">
+                                <div class="section-header">
+                                    <h3>Deal Probability</h3>
+                                    <span class="probability-value" id="dealProbability">0%</span>
+                                </div>
+                                <div class="probability-bar">
+                                    <div class="probability-fill" id="probabilityFill"></div>
+                                </div>
+                            </div>
+
+                            <!-- Engagement Timeline -->
+                            <div class="intelligence-section">
+                                <div class="section-header">
+                                    <h3>Engagement Timeline</h3>
+                                </div>
+                                <div class="timeline-container">
+                                    <canvas id="engagementTimelineChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- AI Analysis Status -->
+                            <div class="intelligence-section" id="analysisStatusSection">
+                                <div class="section-header">
+                                    <h3>AI Analysis</h3>
+                                    <span class="analysis-status" id="analysisStatus">
+                                        <span class="status-indicator" id="statusIndicator"></span>
+                                        <span id="statusText">Loading...</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Recommended Actions -->
+                            <div class="intelligence-section">
+                                <div class="section-header">
+                                    <h3>Recommended Actions</h3>
+                                </div>
+                                <ul class="actions-list" id="recommendationsList">
+                                    <li>Loading recommendations...</li>
+                                </ul>
+                            </div>
+
+                            <!-- Conversation (Collapsed by default) -->
+                            <div class="intelligence-section">
+                                <div class="section-header collapsible" id="conversationHeader">
+                                    <h3>Conversation</h3>
+                                    <svg class="collapse-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                                <div class="conversation-thread collapsed" id="conversationThread">
+                                    <!-- Messages will be inserted here -->
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Performance Tab Content -->
+            <div class="tab-content" id="performanceTab">
+                <div class="performance-charts">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Response Time Trend</h3>
+                            <span class="chart-subtitle">Average minutes</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="responseTimeChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Lead Source ROI</h3>
+                            <span class="chart-subtitle">Pipeline value by source</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="leadSourceChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Pipeline Velocity</h3>
+                            <span class="chart-subtitle">Deals closed per week</span>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="pipelineVelocityChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./config.js"></script>
+    <script src="./dashboard.js"></script>
+</body>
+</html>
