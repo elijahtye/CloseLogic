@@ -13,7 +13,7 @@
         <div class="top-bar-content">
             <div class="top-bar-left">
                 <div class="dashboard-logo">
-                    <span class="logo-icon">C</span>
+                    <img src="./images/closelogic.png" alt="CloseLogic" class="logo-image">
                     <span class="logo-text">CloseLogic</span>
                 </div>
                 <h1 class="page-title">Dashboard</h1>
@@ -26,16 +26,24 @@
                 </div>
             </div>
             <div class="top-bar-right">
-                <button class="btn btn-primary btn-small" id="syncInboxBtn">
+                <button class="btn btn-outline btn-small" id="createDemoLeadBtn" style="margin-right: 12px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21.5 2V6H17.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2.5 22V18H6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M21.5 6C20.57 4.14 18.99 2.71 17.05 2.04C15.11 1.37 13.01 1.5 11.15 2.43C9.29 3.36 7.86 4.94 7.19 6.88C6.52 8.82 6.65 10.92 7.58 12.78L2.5 17.86" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M21.5 6L17.5 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2.5 18L6.5 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M2.5 18C3.43 19.86 5.01 21.29 6.95 21.96C8.89 22.63 10.99 22.5 12.85 21.57C14.71 20.64 16.14 19.06 16.81 17.12C17.48 15.18 17.35 13.08 16.42 11.22L21.5 6.14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
-                    Sync Inbox
+                    Create Demo Lead
+                </button>
+                <div class="auto-sync-wrap" id="autoSyncWrap" style="margin-right: 12px;">
+                    <span class="auto-sync-label">AUTO Sync</span>
+                    <button class="toggle-switch" id="autoSyncToggle" type="button" aria-pressed="false" aria-label="Toggle auto sync">
+                        <span class="toggle-thumb"></span>
+                    </button>
+                </div>
+                <button class="btn btn-primary btn-small" id="gmailConnectionBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M22 6L12 13L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <span id="gmailConnectionBtnText">Connect Gmail</span>
                 </button>
                 <div class="user-menu">
                     <button class="user-menu-btn" id="userMenuBtn">
@@ -45,10 +53,9 @@
                         </svg>
                     </button>
                     <div class="user-menu-dropdown" id="userMenuDropdown">
-                        <a href="#" class="user-menu-item">Profile</a>
-                        <a href="#" class="user-menu-item">Settings</a>
+                        <a href="#" class="user-menu-item" id="settingsMenuItem">Settings</a>
                         <hr class="user-menu-divider">
-                        <a href="index.html" class="user-menu-item">Logout</a>
+                        <a href="#" class="user-menu-item" id="signOutMenuItem">Sign out</a>
                     </div>
                 </div>
             </div>
@@ -132,7 +139,20 @@
                     <!-- Pipeline Column (Left) -->
                     <aside class="pipeline-panel">
                         <div class="pipeline-header">
-                            <h2>Pipeline</h2>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <h2>Pipeline</h2>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <button class="btn btn-primary btn-small" id="selectLeadsBtn" style="display: inline-flex;">
+                                        Select
+                                    </button>
+                                    <button class="btn btn-primary btn-small" id="deleteSelectedLeadsBtn" style="display: none;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M3 6H5H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                            <path d="M8 6V4C8 3.46957 8.21071 2.96086 8.58579 2.58579C8.96086 2.21071 9.46957 2 10 2H14C14.5304 2 15.0391 2.21071 15.4142 2.58579C15.7893 2.96086 16 3.46957 16 4V6M19 6V20C19 20.5304 18.7893 21.0391 18.4142 21.4142C18.0391 21.7893 17.5304 22 17 22H7C6.46957 22 5.96086 21.7893 5.58579 21.4142C5.21071 21.0391 5 20.5304 5 20V6H19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
                             <div class="pipeline-filters">
                                 <div class="filter-buttons">
                                     <button class="filter-btn active" data-filter="all">All</button>
@@ -153,6 +173,11 @@
                                     </svg>
                                     <input type="text" id="leadSearch" placeholder="Search leads...">
                                 </div>
+                            </div>
+                            <!-- Pipeline Actions -->
+                            <div class="pipeline-actions">
+                                <button class="btn btn-outline btn-small" id="openPersonalizationBtn">Personalization</button>
+                                <button class="btn btn-primary btn-small" id="openAutomationsBtn">Automations</button>
                             </div>
                         </div>
                         <div class="pipeline-list" id="leadList">
@@ -222,6 +247,17 @@
                                 </div>
                             </div>
 
+                            <!-- Pipeline Value (Conditional) -->
+                            <div class="intelligence-section">
+                                <div class="section-header">
+                                    <h3>Expected Value</h3>
+                                    <span class="pipeline-value" id="leadPipelineValue">—</span>
+                                </div>
+                                <div class="pipeline-price-range" id="leadPriceRange" style="display: none;">
+                                    Estimated Range: <span id="priceRangeText"></span>
+                                </div>
+                            </div>
+
                             <!-- Engagement Timeline -->
                             <div class="intelligence-section">
                                 <div class="section-header">
@@ -236,10 +272,16 @@
                             <div class="intelligence-section" id="analysisStatusSection">
                                 <div class="section-header">
                                     <h3>AI Analysis</h3>
-                                    <span class="analysis-status" id="analysisStatus">
-                                        <span class="status-indicator" id="statusIndicator"></span>
-                                        <span id="statusText">Loading...</span>
-                                    </span>
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <span class="analysis-status" id="analysisStatus">
+                                            <span class="status-indicator" id="statusIndicator"></span>
+                                            <span id="statusText">Loading...</span>
+                                        </span>
+                                        <!-- TEMP: Analyze Lead button for Phase 1 testing -->
+                                        <button class="btn btn-outline btn-small" id="analyzeLeadBtn" style="font-size: 12px; padding: 6px 12px;">
+                                            Analyze Lead
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -263,6 +305,24 @@
                                 </div>
                                 <div class="conversation-thread collapsed" id="conversationThread">
                                     <!-- Messages will be inserted here -->
+                                </div>
+                                <div class="reply-composer" id="replyComposer" style="display: none;">
+                                    <div class="reply-composer-row">
+                                        <label class="reply-label" for="replySubjectInput">Subject</label>
+                                        <input class="reply-input" id="replySubjectInput" type="text" placeholder="Re: ..." />
+                                    </div>
+                                    <div class="reply-composer-row">
+                                        <label class="reply-label" for="replyBodyInput">Message</label>
+                                        <textarea class="reply-textarea" id="replyBodyInput" rows="4" placeholder="Type your reply..."></textarea>
+                                    </div>
+                                    <div class="reply-composer-actions">
+                                        <button class="btn btn-outline btn-small" id="copyReplyBtn">Copy</button>
+                                        <button class="btn btn-primary btn-small" id="generateReplyBtn">Generate Reply</button>
+                                        <button class="btn btn-primary btn-small" id="sendReplyBtn">Send Email</button>
+                                    </div>
+                                    <div class="reply-composer-hint">
+                                        Sends via Gmail and logs the outbound message to the conversation thread.
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -309,6 +369,257 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./config.js"></script>
+    <script src="./authGuard.js"></script>
+    <script src="./planFeatures.js"></script>
     <script src="./dashboard.js"></script>
+
+    <!-- AI Reply Modal -->
+    <div class="modal-overlay" id="aiReplyModalOverlay" style="display:none;">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="aiReplyModalTitle">
+            <div class="modal-header">
+                <h3 id="aiReplyModalTitle">AI Draft Reply</h3>
+                <button class="modal-close" id="aiReplyModalCloseBtn" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label for="aiReplySubject">Subject</label>
+                    <input id="aiReplySubject" type="text" />
+                </div>
+                <div class="modal-field">
+                    <label for="aiReplyBody">Body</label>
+                    <textarea id="aiReplyBody" rows="10"></textarea>
+                </div>
+                <div class="modal-notes" id="aiReplyNotes" style="display:none;"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline btn-small" id="copySubjectBtn">Copy Subject</button>
+                <button class="btn btn-outline btn-small" id="copyBodyBtn">Copy Body</button>
+                <button class="btn btn-outline btn-small" id="copyBothBtn">Copy Both</button>
+                <div style="flex:1;"></div>
+                <button class="btn btn-outline btn-small" id="useDraftBtn">Use Draft</button>
+                <button class="btn btn-primary btn-small" id="closeAiReplyBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile / Tier Modal -->
+    <div class="modal-overlay" id="profileModalOverlay" style="display:none;">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+            <div class="modal-header">
+                <h3 id="profileModalTitle">Settings</h3>
+                <button class="modal-close" id="profileModalCloseBtn" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label for="profileNameInput">Name</label>
+                    <input id="profileNameInput" type="text" placeholder="Your name" />
+                    <div class="modal-help">This name will be used as your email signature.</div>
+                </div>
+                <div class="modal-field">
+                    <label for="profileEmailInput">Email</label>
+                    <input id="profileEmailInput" type="email" placeholder="you@example.com" />
+                    <div class="modal-help">Updating email may require confirmation via email.</div>
+                </div>
+                <div class="modal-field">
+                    <label>Tiers / Current Tier</label>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span id="profileCurrentTierDisplay" style="font-weight: 500; color: #1a1a1a;">Free</span>
+                        <button class="btn btn-outline btn-small" id="manageSubscriptionBtn" style="font-size: 12px; padding: 6px 12px;">
+                            Manage your subscription
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-field" style="border-top: 1px solid #e5e5e5; padding-top: 16px; margin-top: 16px;">
+                    <label>Gmail Connection</label>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span id="profileGmailStatusDisplay" style="font-size: 14px; color: #666;">Checking...</span>
+                        <button class="btn btn-outline btn-small" id="disconnectGmailBtn" style="font-size: 12px; padding: 6px 12px; display: none;">
+                            Sign out of Gmail
+                        </button>
+                    </div>
+                    <div class="modal-help" id="profileGmailHelp" style="margin-top: 8px; font-size: 12px; color: #999;">
+                        Disconnect to reconnect with updated permissions (send/modify).
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline btn-small" id="profileCancelBtn">Cancel</button>
+                <div style="flex:1;"></div>
+                <button class="btn btn-primary btn-small" id="profileSaveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tiers are managed via tiers.html (page) -->
+
+    <!-- Personalization Modal -->
+    <div class="modal-overlay" id="personalizationModalOverlay" style="display:none;">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="personalizationModalTitle">
+            <div class="modal-header">
+                <h3 id="personalizationModalTitle">Personalization</h3>
+                <button class="modal-close" id="personalizationModalCloseBtn" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-field">
+                    <label for="personalizationStyleSelect">Communication style</label>
+                    <select id="personalizationStyleSelect">
+                        <option value="friendly-conversational">Friendly conversational</option>
+                        <option value="professional-direct">Professional direct</option>
+                        <option value="warm-supportive">Warm supportive</option>
+                        <option value="short-efficient">Short efficient</option>
+                    </select>
+                </div>
+                <div class="modal-field">
+                    <label for="personalizationGoalSelect">Primary goal</label>
+                    <select id="personalizationGoalSelect">
+                        <option value="closing-more-deals">Closing more deals</option>
+                        <option value="responding-faster">Responding faster</option>
+                        <option value="prioritizing-leads">Prioritizing leads</option>
+                        <option value="reducing-overwhelm">Reducing overwhelm</option>
+                    </select>
+                </div>
+                <div class="modal-field">
+                    <label for="personalizationLeadVolumeSelect">Lead volume</label>
+                    <select id="personalizationLeadVolumeSelect">
+                        <option value="0-25">0-25</option>
+                        <option value="25-100">25-100</option>
+                        <option value="100-250">100-250</option>
+                        <option value="250+">250+</option>
+                    </select>
+                </div>
+                <div class="modal-help">These settings affect AI scoring, expected value, and reply drafting.</div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline btn-small" id="personalizationCancelBtn">Cancel</button>
+                <div style="flex:1;"></div>
+                <button class="btn btn-primary btn-small" id="personalizationSaveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Automations Modal -->
+    <div class="modal-overlay" id="automationsModalOverlay" style="display:none;">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="automationsModalTitle">
+            <div class="modal-header">
+                <h3 id="automationsModalTitle">Automations</h3>
+                <button class="modal-close" id="automationsModalCloseBtn" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="automations-tabs">
+                    <button class="automation-tab active" data-tab="actionItems">Action Items</button>
+                    <button class="automation-tab" data-tab="replyReminders">Reply Reminders</button>
+                    <button class="automation-tab" data-tab="priorityLeads">Priority Leads</button>
+                    <button class="automation-tab" data-tab="autoReply">Auto Reply</button>
+                </div>
+
+                <div class="automation-panel active" id="automationTabActionItems">
+                    <div class="automation-section-title">Your action items</div>
+                    <div class="automation-controls" style="margin-bottom: 12px;">
+                        <label>Follow-up score threshold</label>
+                        <input id="followupScoreThreshold" type="number" min="0" max="100" step="1" value="75" />
+                        <span>(leads ≥ threshold are Follow-ups)</span>
+                    </div>
+                    <div class="action-item-create">
+                        <input id="newActionItemTitle" type="text" placeholder="Add an action item..." />
+                        <select id="newActionItemPriority">
+                            <option value="high">High</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                        <button class="btn btn-primary btn-small" id="addActionItemBtn">Add</button>
+                    </div>
+                    <div class="action-items-list" id="actionItemsList"></div>
+                </div>
+
+                <div class="automation-panel" id="automationTabReplyReminders">
+                    <div class="automation-section-title">Reply reminders</div>
+                    <div class="automation-controls">
+                        <label>Show leads needing follow-up after</label>
+                        <input id="replyReminderHours" type="number" min="1" step="1" value="24" />
+                        <span>hours</span>
+                        <div style="flex:1;"></div>
+                        <span class="auto-sync-label" style="margin-left: 8px;">Auto Reminder</span>
+                        <button class="toggle-switch" id="autoReminderToggle" type="button" aria-pressed="false" aria-label="Toggle auto reminder">
+                            <span class="toggle-thumb"></span>
+                        </button>
+                    </div>
+                    <div class="automation-help">Create reminders for leads that haven’t been replied to recently.</div>
+                    <div class="automation-list" id="replyRemindersList"></div>
+                </div>
+
+                <div class="automation-panel" id="automationTabPriorityLeads">
+                    <div class="automation-section-title">Priority leads</div>
+                    <div class="automation-controls">
+                        <label>Priority if Expected Value ≥</label>
+                        <input id="priorityLeadThreshold" type="number" min="0" step="1000" value="50000" />
+                        <span>USD</span>
+                        <label style="margin-left:12px; display:flex; align-items:center; gap:8px;">
+                            <input id="priorityIncludePriceMentioned" type="checkbox" checked />
+                            Price mentioned
+                        </label>
+                    </div>
+                    <div class="automation-help">Priority leads are computed from OpenAI-backed Expected Value and explicit price mentions.</div>
+                    <div class="automation-list" id="priorityLeadsList"></div>
+                </div>
+
+                <div class="automation-panel" id="automationTabAutoReply">
+                    <div class="automation-section-title">Auto reply</div>
+                    <div class="automation-controls" style="margin-bottom: 10px;">
+                        <label style="display:flex; align-items:center; gap:10px;">
+                            <span>Auto Reply</span>
+                            <button class="toggle-switch" id="autoReplyToggle" type="button" aria-pressed="false" aria-label="Toggle auto reply">
+                                <span class="toggle-thumb"></span>
+                            </button>
+                        </label>
+                        <div style="flex:1;"></div>
+                        <button class="btn btn-outline btn-small" id="autoReplyRunOnceBtn">Run once</button>
+                    </div>
+                    <div class="automation-help">When enabled, CloseLogic will generate + send replies for eligible leads after inbox sync. It’s rate-limited and deduped to avoid spam.</div>
+
+                    <div class="automation-controls" style="margin-top: 12px;">
+                        <label style="display:flex; align-items:center; gap:8px;">
+                            Minimum score
+                            <input id="autoReplyMinScore" type="number" min="0" max="100" step="1" value="70" style="width: 90px;" />
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px;">
+                            <input id="autoReplyPriceQualified" type="checkbox" />
+                            Price qualified
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px;">
+                            <input id="autoReplyMentionDatesOnly" type="checkbox" />
+                            Mention dates only
+                        </label>
+                    </div>
+
+                    <div class="automation-controls" style="margin-top: 12px;">
+                        <label style="display:flex; align-items:center; gap:8px;">
+                            <input type="radio" name="autoReplyMode" id="autoReplyModeAi" value="ai" checked />
+                            Use AI draft
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px;">
+                            <input type="radio" name="autoReplyMode" id="autoReplyModeTemplate" value="template" />
+                            Use custom template
+                        </label>
+                    </div>
+
+                    <div class="modal-field" id="autoReplyTemplateFields" style="display:none;">
+                        <label for="autoReplySubjectTemplate">Subject template</label>
+                        <input id="autoReplySubjectTemplate" type="text" placeholder="Re: {lead_name}" />
+                        <div class="modal-help">Variables: {lead_name}, {lead_email}</div>
+                    </div>
+                    <div class="modal-field" id="autoReplyBodyTemplateField" style="display:none;">
+                        <label for="autoReplyBodyTemplate">Body template</label>
+                        <textarea id="autoReplyBodyTemplate" rows="6" placeholder="Hi {lead_name},\n\nThanks for reaching out..."></textarea>
+                    </div>
+
+                    <div class="automation-section-title" style="margin-top: 14px;">Eligible leads</div>
+                    <div class="automation-list" id="autoReplyEligibleList"></div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline btn-small" id="automationsCloseBtn">Close</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -1,5 +1,6 @@
 // Onboarding Flow JavaScript
-// Collects user preferences for AI personalization
+// Using supabaseClient to avoid shadowing global window.supabase
+let supabaseClient = null;
 
 const onboardingData = {
     lead_volume: null,
@@ -11,7 +12,24 @@ const onboardingData = {
 let currentStep = 1;
 const totalSteps = 4;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        supabaseClient = window.getSupabaseClient();
+    } catch (e) {
+        console.error('[onboarding] Supabase init failed:', e);
+        window.location.href = 'auth.html';
+        return;
+    }
+
+    // Require auth; if already onboarded, never show onboarding again
+    const authResult = await window.authGuard.checkAuthAndOnboarding({
+        requireAuth: true,
+        requireOnboarding: false,
+        redirectIfOnboarded: true
+    });
+    if (!authResult) return;
+    
+    // Initialize onboarding flow
     initializeOnboarding();
 });
 
@@ -204,38 +222,53 @@ function completeOnboarding() {
 }
 
 async function saveOnboardingData() {
-    // TODO: Replace with actual API call to save onboarding data
-    // This should save to the database and link to the user account
+    if (!supabaseClient) {
+        throw new Error('Supabase client not initialized');
+    }
     
-    const userData = {
-        ...onboardingData,
+    // Get current session
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+    
+    if (sessionError || !session || !session.user) {
+        console.error('[onboarding] Not authenticated');
+        throw new Error('Not authenticated. Please log in again.');
+    }
+    
+    const userId = session.user.id;
+    console.log('[onboarding] Saving onboarding data for user:', userId);
+    
+    // Prepare update data
+    const updateData = {
+        lead_volume: onboardingData.lead_volume,
+        primary_goal: onboardingData.primary_goal,
+        communication_style: onboardingData.communication_style,
         onboarding_completed: true,
-        onboarding_completed_at: new Date().toISOString()
+        updated_at: new Date().toISOString()
     };
     
-    // Example API call structure:
-    // const response = await fetch('/api/user/onboarding', {
-    //     method: 'POST',
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //         'Authorization': `Bearer ${getAuthToken()}`
-    //     },
-    //     body: JSON.stringify(userData)
-    // });
-    // 
-    // if (!response.ok) {
-    //     throw new Error('Failed to save onboarding data');
-    // }
-    // 
-    // return await response.json();
+    console.log('[onboarding] Update data:', updateData);
     
-    // For now, store in localStorage as fallback
-    localStorage.setItem('onboardingData', JSON.stringify(userData));
+    updateData.onboarding_completed_at = new Date().toISOString();
+
+    // Upsert profile (avoids race condition if profile row doesn't exist yet)
+    const { data, error } = await supabase
+        .from('profiles')
+        .upsert({ id: userId, ...updateData }, { onConflict: 'id' })
+        .select()
+        .single();
     
-    console.log('Onboarding data to be saved:', userData);
+    if (error) {
+        console.error('[onboarding] Error saving onboarding data:', error);
+        throw new Error(`Failed to save onboarding data: ${error.message}`);
+    }
     
-    // Return resolved promise for now
-    return Promise.resolve(userData);
+    console.log('[onboarding] Onboarding data saved successfully');
+    console.log('[onboarding] Profile updated:', { 
+        userId, 
+        onboarding_completed: data.onboarding_completed 
+    });
+    
+    return data;
 }
 
 function redirectToDashboard() {

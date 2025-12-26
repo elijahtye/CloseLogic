@@ -4,7 +4,10 @@
   "description": "CloseLogic - Real Estate CRM with AI-powered lead analysis",
   "type": "module",
   "scripts": {
-    "dev": "vercel dev"
+    "dev": "node dev-server.mjs",
+    "dev:local": "PORT=5001 node dev-server.mjs",
+    "dev:restart": "lsof -ti:5001 | xargs kill -9 2>/dev/null || true; PORT=5001 node dev-server.mjs",
+    "dev:vercel": "vercel dev --listen 5000"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0"

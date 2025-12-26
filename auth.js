@@ -1,84 +1,31 @@
-// Auth Page JavaScript
-// Initialize Supabase client
-let supabase = null;
+// Auth Page JavaScript (email/password + Google OAuth)
+// Using supabaseClient to avoid shadowing global window.supabase
+let supabaseClient = null;
 
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('DOM loaded, initializing auth...');
-    
-    // Initialize Supabase client
     try {
-        if (typeof window.supabase === 'undefined') {
-            console.error('Supabase library not loaded. Check script tag.');
-            alert('Authentication library not loaded. Please refresh the page.');
-            return;
-        }
-        
-        if (typeof window.SUPABASE_CONFIG === 'undefined') {
-            console.error('window.SUPABASE_CONFIG not defined. Check config.js script tag.');
-            alert('Configuration error: config.js not loaded. Please check script tags.');
-            return;
-        }
-        
-        // Validate config exists
-        console.log('Checking Supabase config:', {
-            url: window.SUPABASE_CONFIG?.url,
-            anonKeyLength: window.SUPABASE_CONFIG?.anonKey?.length,
-            anonKeyPreview: window.SUPABASE_CONFIG?.anonKey?.substring(0, 20) + '...'
-        });
-        
-        if (!window.SUPABASE_CONFIG || !window.SUPABASE_CONFIG.url || !window.SUPABASE_CONFIG.anonKey) {
-            console.error('Supabase configuration missing:', window.SUPABASE_CONFIG);
-            alert('Configuration error: Supabase URL and anon key are required. Please check config.js');
-            return;
-        }
-        
-        // Check for placeholder values (but allow valid keys that contain 'anon' in JWT payload)
-        // Valid JWT tokens are long (typically 200+ chars), so check length
-        const urlCheck = window.SUPABASE_CONFIG.url.includes('your-project');
-        const keyCheck = window.SUPABASE_CONFIG.anonKey === 'your-anon-public-key-here';
-        const lengthCheck = window.SUPABASE_CONFIG.anonKey && window.SUPABASE_CONFIG.anonKey.length < 50;
-        
-        console.log('Validation checks:', {
-            urlHasPlaceholder: urlCheck,
-            keyIsPlaceholder: keyCheck,
-            keyTooShort: lengthCheck,
-            actualKeyLength: window.SUPABASE_CONFIG.anonKey.length
-        });
-        
-        if (urlCheck || keyCheck || lengthCheck) {
-            console.error('Supabase configuration appears to use placeholders:', {
-                url: window.SUPABASE_CONFIG.url,
-                anonKeyLength: window.SUPABASE_CONFIG.anonKey?.length,
-                urlCheck,
-                keyCheck,
-                lengthCheck
-            });
-            alert('Configuration error: Please replace placeholder values with your actual Supabase credentials in config.js');
-            return;
-        }
-        
-        // Validate URL format
-        if (!window.SUPABASE_CONFIG.url.startsWith('https://') || !window.SUPABASE_CONFIG.url.includes('.supabase.co')) {
-            console.error('Invalid Supabase URL format:', window.SUPABASE_CONFIG.url);
-            alert('Configuration error: Invalid Supabase URL format. Should be: https://your-project.supabase.co');
-            return;
-        }
-        
-        console.log('Config validation passed!');
-        
-        supabase = window.supabase.createClient(window.SUPABASE_CONFIG.url, window.SUPABASE_CONFIG.anonKey);
-        console.log('Supabase client initialized successfully');
-    } catch (error) {
-        console.error('Error initializing Supabase:', error);
-        alert('Error initializing authentication. Please refresh the page.');
+        supabaseClient = window.getSupabaseClient();
+    } catch (e) {
+        console.error('[auth] Supabase init failed:', e);
+        alert('Configuration error. Please refresh and check console.');
         return;
+    }
+
+    // If already authenticated, never stay on auth screen
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session?.user) {
+            await window.authGuard.redirectAfterLogin();
+            return;
+        }
+    } catch (_) {
+        // continue to show auth screen
     }
     
     const tabButtons = document.querySelectorAll('.tab-btn');
     const formContainers = document.querySelectorAll('.auth-form-container');
     const signupForm = document.getElementById('signupForm');
     const loginForm = document.getElementById('loginForm');
-    const googleSignInBtn = document.getElementById('googleSignInBtn');
     const googleSignInButtons = document.querySelectorAll('.google-signin-btn');
 
     // Tab switching
@@ -96,9 +43,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     });
 
-    // Sign up form validation
+    // Email/password signup
     if (signupForm) {
-        signupForm.addEventListener('submit', function(e) {
+        signupForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
             const password = document.getElementById('password').value;
@@ -116,33 +63,67 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
             
-            // Here you would typically send the data to your backend
-            console.log('Sign up form submitted');
+            const email = document.getElementById('email').value;
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const fullName = `${firstName} ${lastName}`.trim();
             
-            // After successful signup, redirect to onboarding
-            // In production, this would happen after backend confirms account creation
-            window.location.href = 'onboarding.html';
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName || email.split('@')[0] // Fallback to email prefix if no name
+                        }
+                    }
+                });
+                
+                if (error) {
+                    alert(`Sign up failed: ${error.message}`);
+                    return;
+                }
+                
+                if (data.session) {
+                    await supabaseClient.auth.setSession(data.session);
+                    await window.authGuard.redirectAfterLogin();
+                } else {
+                    // Email confirmation required
+                    alert('Please check your email to confirm your account.');
+                }
+            } catch (error) {
+                alert('Sign up failed. Please try again.');
+            }
         });
     }
 
-    // Login form submission
+    // Email/password login
     if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // Here you would typically send the data to your backend
-            console.log('Login form submitted');
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
             
-            // Check if user has completed onboarding
-            // In production, this would be checked from the backend
-            const hasCompletedOnboarding = localStorage.getItem('onboardingData');
-            
-            if (hasCompletedOnboarding) {
-                // Redirect to dashboard if onboarding is complete
-                window.location.href = 'dashboard.html';
-            } else {
-                // Redirect to onboarding if not completed
-                window.location.href = 'onboarding.html';
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (error) {
+                    alert(`Login failed: ${error.message}`);
+                    return;
+                }
+                
+                if (data.session) {
+                    await supabaseClient.auth.setSession(data.session);
+                    await window.authGuard.redirectAfterLogin();
+                } else {
+                    alert('Login failed. Please try again.');
+                }
+            } catch (error) {
+                alert('Login failed. Please try again.');
             }
         });
     }
@@ -165,70 +146,15 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     
-    // Google OAuth Sign In
-    // Attach listeners to ALL Google buttons (both signup and login forms)
-    console.log('Setting up Google OAuth buttons...');
-    console.log('Found buttons by class:', googleSignInButtons.length);
-    console.log('Found button by ID (signup):', googleSignInBtn ? 'Yes' : 'No');
-    
-    if (supabase) {
-        // Attach to all buttons with the class (both signup and login)
-        if (googleSignInButtons.length > 0) {
-            googleSignInButtons.forEach((button, index) => {
-                const formType = button.getAttribute('data-form') || 'unknown';
-                const buttonId = button.id || 'no-id';
-                console.log(`Attaching listener to button ${index + 1}: form="${formType}", id="${buttonId}"`);
-                
-                button.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log(`✓ Google sign-in button clicked (${formType} form, id="${buttonId}")`);
-                    await handleGoogleSignIn();
-                });
+    // Google OAuth Sign In (both forms)
+    if (googleSignInButtons.length > 0) {
+        googleSignInButtons.forEach((button) => {
+            button.addEventListener('click', async function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                await handleGoogleSignIn();
             });
-            console.log(`✓ Attached Google OAuth handlers to ${googleSignInButtons.length} button(s)`);
-        } else {
-            console.warn('No buttons found with class "google-signin-btn"');
-        }
-        
-        // Also attach to button by ID if it exists and wasn't already handled
-        if (googleSignInBtn) {
-            const alreadyAttached = Array.from(googleSignInButtons).includes(googleSignInBtn);
-            if (!alreadyAttached) {
-                console.log('Attaching listener to signup button by ID');
-                googleSignInBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('✓ Google sign-in button clicked (signup form, by ID)');
-                    await handleGoogleSignIn();
-                });
-            } else {
-                console.log('Signup button already has listener from class selector');
-            }
-        }
-        
-        // Also attach to login button by ID if it exists
-        const googleSignInBtnLogin = document.getElementById('googleSignInBtnLogin');
-        if (googleSignInBtnLogin) {
-            const alreadyAttached = Array.from(googleSignInButtons).includes(googleSignInBtnLogin);
-            if (!alreadyAttached) {
-                console.log('Attaching listener to login button by ID');
-                googleSignInBtnLogin.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('✓ Google sign-in button clicked (login form, by ID)');
-                    await handleGoogleSignIn();
-                });
-            } else {
-                console.log('Login button already has listener from class selector');
-            }
-        }
-        
-        if (googleSignInButtons.length === 0 && !googleSignInBtn && !googleSignInBtnLogin) {
-            console.error('❌ No Google sign-in buttons found at all!');
-        }
-    } else {
-        console.error('❌ Supabase client not initialized - cannot attach Google OAuth handlers');
+        });
     }
     
     // Check for OAuth callback (handles redirect after Google login) - PKCE flow
@@ -239,31 +165,17 @@ document.addEventListener('DOMContentLoaded', async function() {
  * Handle Google OAuth Sign In
  */
 async function handleGoogleSignIn() {
-    console.log('handleGoogleSignIn called');
-    
-    if (!supabase) {
-        console.error('Supabase client not initialized');
+    if (!supabaseClient) {
         alert('Authentication service not available. Please refresh the page.');
         return;
     }
     
-    // Check if config is valid
-    if (!window.SUPABASE_CONFIG.url || !window.SUPABASE_CONFIG.anonKey) {
-        console.error('Supabase config missing:', window.SUPABASE_CONFIG);
-        alert('Configuration error: Supabase credentials not found. Please check config.js');
-        return;
-    }
-    
     try {
-        // Get the redirect URL (current page origin + /dashboard.html)
-        const redirectTo = `${window.location.origin}/dashboard.html`;
-        
-        console.log('OAuth redirect started');
-        console.log('Redirect URL:', redirectTo);
-        console.log('Supabase URL:', window.SUPABASE_CONFIG.url);
+        // Get the redirect URL (current page origin + /auth.html for callback handling)
+        const redirectTo = `${window.location.origin}/auth.html`;
         
         // Sign in with Google OAuth (PKCE flow)
-        const { data, error } = await supabase.auth.signInWithOAuth({
+        const { data, error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
                 redirectTo: redirectTo
@@ -271,16 +183,15 @@ async function handleGoogleSignIn() {
         });
         
         if (error) {
-            console.error('OAuth error:', error);
+            console.error('[auth] OAuth error:', error);
             throw error;
         }
         
         // User will be redirected to Google, then back to redirectTo
         // The callback will be handled in handleOAuthCallback()
-        console.log('OAuth initiated successfully', data);
+        void data;
         
     } catch (error) {
-        console.error('Error during Google OAuth:', error);
         alert(`Failed to sign in with Google: ${error.message || 'Unknown error'}\n\nCheck console for details.`);
     }
 }
@@ -289,8 +200,7 @@ async function handleGoogleSignIn() {
  * Handle OAuth callback after redirect from Google (PKCE flow)
  */
 async function handleOAuthCallback() {
-    if (!supabase) {
-        console.log('Supabase not initialized, skipping OAuth callback');
+    if (!supabaseClient) {
         return;
     }
     
@@ -312,10 +222,8 @@ async function handleOAuthCallback() {
         
         // Handle PKCE code exchange
         if (code) {
-            console.log('Code detected in URL - exchanging for session');
-            
             // Exchange code for session (PKCE flow)
-            const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+            const { data, error: exchangeError } = await supabaseClient.auth.exchangeCodeForSession(code);
             
             if (exchangeError) {
                 console.error('Session exchange failure:', exchangeError);
@@ -323,21 +231,20 @@ async function handleOAuthCallback() {
             }
             
             if (data.session) {
-                console.log('Session exchange success - session established');
                 // Clean up URL (remove code and other params)
                 const cleanUrl = window.location.pathname;
                 window.history.replaceState({}, document.title, cleanUrl);
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
+                // Check onboarding status and redirect accordingly
+                await window.authGuard.redirectAfterLogin();
             } else {
-                console.warn('Session exchange returned no session');
+                // no-op
             }
         }
     } catch (error) {
-        console.error('Error handling OAuth callback:', error);
         alert(`Error completing sign in: ${error.message || 'Unknown error'}`);
         // Clean up URL on error
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 }
+
 

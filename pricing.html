@@ -13,14 +13,13 @@
         <div class="container">
             <div class="logo">
                 <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
-                    <span class="logo-icon">C</span>
+                    <img src="./images/closelogic.png" alt="CloseLogic" class="logo-image">
                     <span class="logo-text">CloseLogic</span>
                 </a>
             </div>
             <nav class="nav">
                 <a href="index.html#features">Features</a>
-                <a href="index.html#faq">FAQ</a>
-                <a href="index.html#blog">Blog</a>
+                <a href="faq.html">FAQ</a>
             </nav>
             <div class="header-actions">
                 <a href="auth.html" class="login-link">Login</a>
@@ -38,10 +37,10 @@
             </div>
 
             <div class="pricing-tiers">
-                <!-- Free Tier -->
+                <!-- Viewer Tier -->
                 <div class="tier-card">
                     <div class="tier-header">
-                        <h3 class="tier-name">Free</h3>
+                        <h3 class="tier-name">Viewer</h3>
                         <div class="tier-price">
                             <span class="price-amount">$0</span>
                             <span class="price-period">/month</span>
@@ -49,48 +48,9 @@
                         <p class="tier-description">Perfect for getting started with lead scoring</p>
                     </div>
                     <div class="tier-features">
-                        <ul class="feature-list">
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Connect 1 Gmail inbox</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Lead scoring for up to 50 leads per month</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Basic deal probability score (0–100)</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>AI summary of lead intent</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Basic dashboard access</span>
-                            </li>
-                        </ul>
-                        <div class="tier-limitations">
-                            <p class="limitations-title">Limitations:</p>
-                            <ul class="limitations-list">
-                                <li>No AI-generated email replies</li>
-                                <li>No re-scoring leads</li>
-                                <li>No historical insights</li>
-                            </ul>
-                        </div>
+                        <ul class="feature-list" data-plan="viewer"></ul>
                     </div>
-                    <button class="btn btn-outline btn-full" data-tier="free" data-price="0">Get Started Free</button>
+                    <button class="btn btn-outline btn-full" data-tier="viewer" data-price="0">Get Started Free</button>
                 </div>
 
                 <!-- Agent Tier -->
@@ -105,111 +65,25 @@
                         <p class="tier-description">Everything you need to close more deals</p>
                     </div>
                     <div class="tier-features">
-                        <ul class="feature-list">
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Unlimited lead scoring</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Advanced lead intent & engagement analysis</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>AI-generated follow-up email drafts</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Lead confidence scoring (low / medium / high)</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Re-score leads on demand</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Lead filtering (hot / warm / cold)</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Email thread insights</span>
-                            </li>
-                        </ul>
+                        <ul class="feature-list" data-plan="agent"></ul>
                     </div>
                     <button class="btn btn-primary btn-full" data-tier="agent" data-price="39">Start Free Trial</button>
                 </div>
 
-                <!-- Pro Tier -->
+                <!-- Broker Tier -->
                 <div class="tier-card">
                     <div class="tier-header">
-                        <h3 class="tier-name">Pro</h3>
+                        <h3 class="tier-name">Broker</h3>
                         <div class="tier-price">
                             <span class="price-amount">$79</span>
                             <span class="price-period">/month</span>
                         </div>
-                        <p class="tier-description">Advanced features for power users</p>
+                        <p class="tier-description">Advanced automation and multi-inbox scaling</p>
                     </div>
                     <div class="tier-features">
-                        <ul class="feature-list">
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span><strong>Everything in Agent</strong></span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Priority detection for high-intent leads</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Close timing predictions</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Objection detection (price, timing, financing)</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Weekly performance insights</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Advanced follow-up recommendations</span>
-                            </li>
-                            <li class="feature-item">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M20 6L9 17L4 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <span>Custom tone presets for AI replies</span>
-                            </li>
-                        </ul>
+                        <ul class="feature-list" data-plan="broker"></ul>
                     </div>
-                    <button class="btn btn-primary btn-full" data-tier="pro" data-price="79">Upgrade to Pro</button>
+                    <button class="btn btn-primary btn-full" data-tier="broker" data-price="79">Upgrade to Broker</button>
                 </div>
             </div>
 
@@ -218,21 +92,20 @@
             {
                 "tiers": [
                     {
-                        "id": "free",
-                        "name": "Free",
+                        "id": "viewer",
+                        "name": "Viewer",
                         "price": 0,
                         "stripePriceId": null,
                         "features": [
-                            "Connect 1 Gmail inbox",
-                            "Lead scoring for up to 50 leads per month",
-                            "Basic deal probability score (0–100)",
-                            "AI summary of lead intent",
-                            "Basic dashboard access"
+                            "Gmail sync (manual)",
+                            "AI lead scoring (1–100)",
+                            "Deal probability + lead classification",
+                            "Connect 1 Gmail inbox"
                         ],
                         "limitations": [
-                            "No AI-generated email replies",
-                            "No re-scoring leads",
-                            "No historical insights"
+                            "No AI-generated reply drafts",
+                            "No automations (action items / reminders)",
+                            "No auto reply"
                         ]
                     },
                     {
@@ -251,18 +124,14 @@
                         ]
                     },
                     {
-                        "id": "pro",
-                        "name": "Pro",
+                        "id": "broker",
+                        "name": "Broker",
                         "price": 79,
                         "stripePriceId": null,
                         "features": [
                             "Everything in Agent",
-                            "Priority detection for high-intent leads",
-                            "Close timing predictions",
-                            "Objection detection (price, timing, financing)",
-                            "Weekly performance insights",
-                            "Advanced follow-up recommendations",
-                            "Custom tone presets for AI replies"
+                            "Auto Reply automation",
+                            "Connect up to 5 Gmail inboxes"
                         ]
                     }
                 ]
@@ -295,10 +164,9 @@
                         <a href="#">Status</a>
                     </div>
                     <div class="footer-column">
-                        <h4>Follow Us</h4>
-                        <a href="#">Twitter</a>
-                        <a href="#">LinkedIn</a>
-                        <a href="#">Facebook</a>
+                        <h4>Legal</h4>
+                        <a href="privacy.html">Privacy Policy</a>
+                        <a href="terms.html">Terms of Service</a>
                     </div>
                 </div>
                 <div class="footer-copyright">
@@ -312,6 +180,7 @@
         </div>
     </footer>
 
+    <script src="planFeatures.js"></script>
     <script src="pricing.js"></script>
 </body>
 </html>

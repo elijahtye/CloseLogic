@@ -4,52 +4,25 @@
 const tierConfig = {
     tiers: [
         {
-            id: "free",
-            name: "Free",
+            id: "viewer",
+            name: "Viewer",
             price: 0,
             stripePriceId: null, // Will be set when Stripe is integrated
-            features: [
-                "Connect 1 Gmail inbox",
-                "Lead scoring for up to 50 leads per month",
-                "Basic deal probability score (0–100)",
-                "AI summary of lead intent",
-                "Basic dashboard access"
-            ],
-            limitations: [
-                "No AI-generated email replies",
-                "No re-scoring leads",
-                "No historical insights"
-            ]
+            features: []
         },
         {
             id: "agent",
             name: "Agent",
             price: 39,
             stripePriceId: null, // Will be set when Stripe is integrated
-            features: [
-                "Unlimited lead scoring",
-                "Advanced lead intent & engagement analysis",
-                "AI-generated follow-up email drafts",
-                "Lead confidence scoring (low / medium / high)",
-                "Re-score leads on demand",
-                "Lead filtering (hot / warm / cold)",
-                "Email thread insights"
-            ]
+            features: []
         },
         {
-            id: "pro",
-            name: "Pro",
+            id: "broker",
+            name: "Broker",
             price: 79,
             stripePriceId: null, // Will be set when Stripe is integrated
-            features: [
-                "Everything in Agent",
-                "Priority detection for high-intent leads",
-                "Close timing predictions",
-                "Objection detection (price, timing, financing)",
-                "Weekly performance insights",
-                "Advanced follow-up recommendations",
-                "Custom tone presets for AI replies"
-            ]
+            features: []
         }
     ]
 };
@@ -76,11 +49,52 @@ document.addEventListener('DOMContentLoaded', function() {
             handleTierSelection(tierId, tierPrice);
         });
     });
+
+    // Render per-tier features (included vs locked) from the canonical feature matrix
+    renderTierFeatureLists();
 });
+
+function escapeHtml(str) {
+    return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function iconSvg(stroke) {
+    return `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 6L9 17L4 12" stroke="${stroke}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+}
+
+function renderTierFeatureLists() {
+    const pf = window.PLAN_FEATURES;
+    if (!pf?.FEATURES || !pf?.featureLabelForPlan || !pf?.isFeatureAvailable) {
+        console.warn('[pricing] PLAN_FEATURES not available; skipping feature matrix render');
+        return;
+    }
+
+    document.querySelectorAll('.feature-list[data-plan]').forEach((ul) => {
+        const plan = ul.getAttribute('data-plan');
+        ul.innerHTML = pf.FEATURES.map((f) => {
+            const available = pf.isFeatureAvailable(plan, f.key);
+            const label = pf.featureLabelForPlan(f, plan);
+            const cls = available ? 'feature-item' : 'feature-item feature-locked';
+            const stroke = available ? '#D4AF37' : '#9ca3af';
+            const title = available ? '' : `Locked — requires ${String(f.minPlan || 'viewer').charAt(0).toUpperCase() + String(f.minPlan || 'viewer').slice(1)} tier`;
+            return `<li class="${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>
+                ${iconSvg(stroke)}
+                <span>${escapeHtml(label)}</span>
+            </li>`;
+        }).join('');
+    });
+}
 
 /**
  * Handle tier selection - ready for Stripe integration
- * @param {string} tierId - The tier identifier (free, agent, pro)
+ * @param {string} tierId - The tier identifier (viewer, agent, broker)
  * @param {string} tierPrice - The monthly price
  */
 function handleTierSelection(tierId, tierPrice) {
@@ -93,7 +107,7 @@ function handleTierSelection(tierId, tierPrice) {
 
     // For now, redirect to signup with tier preference
     // When Stripe is integrated, this will initiate checkout
-    if (tierId === 'free') {
+    if (tierId === 'viewer') {
         // Free tier - redirect to signup
         window.location.href = `auth.html?tier=${tierId}`;
     } else {

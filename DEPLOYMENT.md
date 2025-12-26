@@ -2,6 +2,109 @@
 
 Step-by-step instructions to deploy CloseLogic to GitHub and Vercel.
 
+## Part 0: Local Development Setup
+
+### Testing Gmail Connect Locally
+
+**Important**: To test Gmail connect locally, you must use `vercel dev` so `/api/*` routes work properly. The Gmail OAuth flow requires server-side endpoints that are only available through Vercel's serverless function runtime.
+
+```bash
+# Start Vercel dev server
+vercel dev
+
+# This will serve your app and /api routes on http://localhost:3000 (or configured port)
+# Navigate to http://localhost:3000/dashboard.html to test Gmail connect
+```
+
+### Option A: Using Vercel CLI (Recommended for /api routes)
+
+The `/api` routes require Vercel's serverless function runtime. Use Vercel CLI for local development:
+
+#### Step 1: Install Vercel CLI
+
+```bash
+npm i -g vercel
+```
+
+#### Step 2: Login to Vercel
+
+```bash
+vercel login
+```
+
+Follow the prompts to authenticate with your Vercel account.
+
+#### Step 3: Link Project (if already deployed)
+
+If your project is already deployed to Vercel:
+
+```bash
+vercel link
+```
+
+Follow prompts to link to your existing project.
+
+#### Step 4: Pull Environment Variables
+
+```bash
+vercel env pull .env.local
+```
+
+This creates `.env.local` with all environment variables from Vercel.
+
+#### Step 5: Start Local Dev Server
+
+```bash
+vercel dev --listen 5001
+```
+
+This will:
+- Start a local server on `http://localhost:5001`
+- Handle `/api/*` routes as serverless functions (matching production)
+- Serve static files from the project root
+- Hot-reload on file changes
+
+**Important:** The `/api/analyze-lead` and `/api/messages` endpoints will work exactly as they do in production.
+
+### Option B: Using Node.js Dev Server (Alternative)
+
+If you prefer not to use Vercel CLI, you can use the included `dev-server.mjs`:
+
+```bash
+npm run dev:local
+# or
+PORT=5001 node dev-server.mjs
+```
+
+This uses a custom Node.js server that mimics Vercel's API routing. However, **Vercel CLI is recommended** for exact production parity.
+
+### Verify Local Setup
+
+1. Visit `http://localhost:5001`
+2. Check `/api/_health` endpoint: `http://localhost:5001/api/_health`
+3. Test authentication flow
+4. Create a demo lead and verify `/api/analyze-lead` works
+
+### Troubleshooting Local Development
+
+**Issue: "Missing required environment variables"**
+- Solution: Run `vercel env pull .env.local` to sync env vars from Vercel
+- Or manually create `.env.local` with required keys:
+  ```
+  SUPABASE_URL=...
+  SUPABASE_ANON_KEY=...
+  SUPABASE_SERVICE_ROLE_KEY=...
+  OPENAI_API_KEY=...
+  ```
+
+**Issue: "/api routes return 404"**
+- Solution: Ensure you're using `vercel dev` (not just `node dev-server.mjs`)
+- Check that `vercel.json` exists (Vercel CLI creates it automatically)
+
+**Issue: "Port 5001 already in use"**
+- Solution: Kill the process: `lsof -ti:5001 | xargs kill -9`
+- Or use a different port: `vercel dev --listen 5002`
+
 ## Part 1: Deploy to GitHub
 
 ### Step 1: Initialize Git Repository

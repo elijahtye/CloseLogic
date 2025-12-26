@@ -15,12 +15,15 @@ CREATE TABLE profiles (
     primary_goal TEXT CHECK (primary_goal IN ('closing-more-deals', 'responding-faster', 'prioritizing-leads', 'reducing-overwhelm')),
     communication_style TEXT CHECK (communication_style IN ('friendly-conversational', 'professional-direct', 'warm-supportive', 'short-efficient')),
     plan TEXT DEFAULT 'free' CHECK (plan IN ('free', 'agent', 'pro')),
+    onboarding_completed BOOLEAN NOT NULL DEFAULT FALSE,
+    onboarding_completed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX idx_profiles_email ON profiles(email);
 CREATE INDEX idx_profiles_user_id ON profiles(id);
+CREATE INDEX idx_profiles_onboarding_completed ON profiles(onboarding_completed) WHERE onboarding_completed = FALSE;
 
 -- ============================================================================
 -- B) EMAIL ACCOUNTS TABLE
@@ -51,6 +54,7 @@ CREATE TABLE leads (
     source TEXT, -- 'zillow', 'realtor', 'referral', 'website', etc.
     score INTEGER DEFAULT 0 CHECK (score >= 0 AND score <= 100),
     confidence TEXT DEFAULT 'low' CHECK (confidence IN ('low', 'medium', 'high')),
+    classification TEXT DEFAULT 'cold' CHECK (classification IN ('cold', 'warm', 'hot')),
     needs_followup BOOLEAN DEFAULT FALSE,
     last_message_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -92,6 +96,7 @@ CREATE TABLE lead_scores (
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     deal_probability INTEGER NOT NULL CHECK (deal_probability >= 0 AND deal_probability <= 100),
     confidence TEXT NOT NULL CHECK (confidence IN ('low', 'medium', 'high')),
+    classification TEXT NOT NULL CHECK (classification IN ('cold', 'warm', 'hot')),
     reason TEXT NOT NULL,
     recommended_actions JSONB DEFAULT '[]'::jsonb,
     model_version TEXT DEFAULT 'rules_v1',

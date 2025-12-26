@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - CloseLogic</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .faq-page {
+            padding: 80px 0;
+            min-height: calc(100vh - 200px);
+        }
+
+        .faq-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .faq-header h1 {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .faq-header p {
+            font-size: 18px;
+            color: var(--gray-dark);
+        }
+
+        .faq-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            margin-bottom: 40px;
+            padding-bottom: 40px;
+            border-bottom: 1px solid var(--gray);
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .faq-question {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .faq-answer {
+            font-size: 16px;
+            color: var(--gray-dark);
+            line-height: 1.7;
+        }
+
+        .faq-divider {
+            text-align: center;
+            color: var(--gold);
+            font-size: 24px;
+            margin: 40px 0;
+            font-weight: 300;
+        }
+
+        @media (max-width: 768px) {
+            .faq-header h1 {
+                font-size: 36px;
+            }
+
+            .faq-question {
+                font-size: 20px;
+            }
+
+            .faq-page {
+                padding: 40px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+                    <img src="./images/closelogic.png" alt="CloseLogic" class="logo-image">
+                    <span class="logo-text">CloseLogic</span>
+                </a>
+            </div>
+            <nav class="nav">
+                <a href="index.html#features">Features</a>
+                <a href="pricing.html">Pricing</a>
+                <a href="faq.html">FAQ</a>
+            </nav>
+            <div class="header-actions">
+                <a href="auth.html" class="login-link">Login</a>
+                <a href="auth.html" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- FAQ Section -->
+    <section class="faq-page">
+        <div class="container">
+            <div class="faq-header">
+                <h1>Frequently Asked Questions</h1>
+            </div>
+
+            <div class="faq-container">
+                <div class="faq-item">
+                    <div class="faq-question">What is CloseLogic?</div>
+                    <div class="faq-answer">CloseLogic is an intelligent CRM built specifically for real estate professionals. It analyzes email conversations to understand buyer intent, urgency, and property preferences—so agents know exactly which leads deserve attention and when.</div>
+                </div>
+
+                <div class="faq-divider">⸻</div>
+
+                <div class="faq-item">
+                    <div class="faq-question">How does CloseLogic help me close more deals?</div>
+                    <div class="faq-answer">CloseLogic automatically evaluates incoming conversations and assigns clear intent signals such as lead priority, confidence level, and estimated deal value. This removes guesswork and helps you focus on high-impact conversations instead of inbox noise.</div>
+                </div>
+
+                <div class="faq-divider">⸻</div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Do I need to manually tag or score leads?</div>
+                    <div class="faq-answer">No. CloseLogic automatically analyzes conversations and updates lead insights for you. You can still adjust or override information manually, but the system is designed to reduce busywork—not add to it.</div>
+                </div>
+
+                <div class="faq-divider">⸻</div>
+
+                <div class="faq-item">
+                    <div class="faq-question">How accurate is the lead scoring?</div>
+                    <div class="faq-answer">Lead scoring is based on conversational signals like urgency, budget clarity, follow-up behavior, and intent language. Each score is paired with a confidence level and reasoning so you understand why a lead is prioritized—not just the number.</div>
+                </div>
+
+                <div class="faq-divider">⸻</div>
+
+                <div class="faq-item">
+                    <div class="faq-question">What is pipeline value estimation?</div>
+                    <div class="faq-answer">CloseLogic can estimate potential deal value when price signals appear in conversations. This helps you understand not just who is interested, but how much revenue may be tied to your active pipeline.</div>
+                </div>
+
+                <div class="faq-divider">⸻</div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Can CloseLogic help me respond faster?</div>
+                    <div class="faq-answer">Yes. CloseLogic highlights leads that require immediate follow-up and can generate draft responses aligned with your communication style, helping you respond quickly without sounding automated.</div>
+                </div>
+
+                <div class="faq-divider">⸻</div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Is my data secure?</div>
+                    <div class="faq-answer">Yes. CloseLogic is built with security best practices in mind, using modern authentication, encrypted storage, and permission-based access. Your data is never shared or used outside the platform.</div>
+                </div>
+
+                <div class="faq-divider">⸻</div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Do I need technical knowledge to use CloseLogic?</div>
+                    <div class="faq-answer">Not at all. CloseLogic is designed for agents—not engineers. Once connected, the system works automatically in the background while you focus on conversations and closings.</div>
+                </div>
+
+                <div class="faq-divider">⸻</div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Will CloseLogic replace my current CRM?</div>
+                    <div class="faq-answer">CloseLogic can function as a primary CRM or as a focused intelligence layer depending on how you choose to use it. Many users adopt CloseLogic to gain clarity and prioritization that traditional CRMs lack.</div>
+                </div>
+
+                <div class="faq-divider">⸻</div>
+
+                <div class="faq-item">
+                    <div class="faq-question">Does CloseLogic work in real time?</div>
+                    <div class="faq-answer">CloseLogic continuously updates insights as new messages arrive or conversations evolve, ensuring your pipeline reflects the most current buyer intent.</div>
+                </div>
+
+                <div class="faq-divider">⸻</div>
+
+                <div class="faq-item">
+                    <div class="faq-question">What plans are available?</div>
+                    <div class="faq-answer">CloseLogic offers tiered plans designed to scale with your business—from foundational insights to advanced automation and personalized intelligence. You can upgrade at any time as your needs grow.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" style="margin-top: 80px;">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a href="index.html#features">Features</a>
+                        <a href="pricing.html">Pricing</a>
+                        <a href="faq.html">FAQ</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="#">Documentation</a>
+                        <a href="#">API Reference</a>
+                        <a href="#">Guides</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Support</h4>
+                        <a href="faq.html">Help Center</a>
+                        <a href="#">Contact Us</a>
+                        <a href="#">Status</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Follow Us</h4>
+                        <a href="#">Twitter</a>
+                        <a href="#">LinkedIn</a>
+                        <a href="#">Facebook</a>
+                    </div>
+                </div>
+                <div class="footer-copyright">
+                    <p>©2024 CloseLogic. All rights reserved.</p>
+                    <div class="footer-social">
+                        <span class="social-icon"></span>
+                        <span class="social-icon"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
+

@@ -108,7 +108,7 @@ export default async function handler(req, res) {
         // 4. Verify lead ownership
         const { data: lead, error: leadError } = await supabase
             .from('leads')
-            .select('id, user_id')
+            .select('id, user_id, score')
             .eq('id', lead_id)
             .eq('user_id', userId)
             .single();
@@ -151,14 +151,30 @@ export default async function handler(req, res) {
             .eq('user_id', userId);
         
         // 7. Automatically trigger lead analysis (async, don't wait)
-        analyzeLead(lead_id, userId)
-            .then(() => {
-                console.log('[messages] Automatic analysis completed for lead:', lead_id);
-            })
-            .catch((error) => {
-                console.error('[messages] Error in automatic analysis:', error);
-                // Don't fail the request if analysis fails
-            });
+        // Trigger rules:
+        // - Always on new inbound message
+        // - Or if lead has no score yet (backfill)
+        const shouldAnalyze = direction === 'inbound';
+
+        if (shouldAnalyze) {
+            analyzeLead(lead_id, userId, { force: false, triggerCreatedAt: insertedMessage.created_at })
+                .then((result) => {
+                    console.log('[messages] Automatic analysis completed for lead:', lead_id, {
+                        deal_probability: result.deal_probability,
+                        confidence: result.confidence
+                    });
+                })
+                .catch((error) => {
+                    // Log full error details - don't silently fail
+                    console.error('[messages] ERROR in automatic analysis:', {
+                        lead_id: lead_id,
+                        error: error.message,
+                        stack: error.stack,
+                        name: error.name
+                    });
+                    // Don't fail the request if analysis fails, but log it prominently
+                });
+        }
         
         // 8. Return success (analysis runs in background)
         return res.status(200).json({

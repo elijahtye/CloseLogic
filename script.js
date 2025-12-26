@@ -52,9 +52,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Auto-rotate reviews every 5 seconds
+    // Auto-rotate reviews every 10 seconds (slowed down from 5 seconds)
     function startAutoRotate() {
-        reviewInterval = setInterval(nextReview, 5000);
+        reviewInterval = setInterval(nextReview, 10000);
     }
 
     // Stop auto-rotate when user interacts
@@ -67,12 +67,12 @@ document.addEventListener('DOMContentLoaded', function() {
         dot.addEventListener('click', () => {
             stopAutoRotate();
             showReview(reviewCards[index]);
-            // Reshuffle and restart auto-rotate after 10 seconds
+            // Reshuffle and restart auto-rotate after 15 seconds
             setTimeout(() => {
                 shuffledReviews = shuffleArray(reviewCards);
                 currentIndex = 0;
                 startAutoRotate();
-            }, 10000);
+            }, 15000);
         });
     });
 
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function(e) {
             const href = this.getAttribute('href');
-            if (href !== '#' && href !== '#login' && href !== '#blog') {
+            if (href !== '#' && href !== '#login') {
                 e.preventDefault();
                 const target = document.querySelector(href);
                 if (target) {

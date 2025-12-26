@@ -11,14 +11,13 @@
     <header class="header">
         <div class="container">
             <div class="logo">
-                <span class="logo-icon">C</span>
+                <img src="./images/closelogic.png" alt="CloseLogic" class="logo-image">
                 <span class="logo-text">CloseLogic</span>
             </div>
             <nav class="nav">
                 <a href="#features">Features</a>
                 <a href="pricing.html">Pricing</a>
-                <a href="#faq">FAQ</a>
-                <a href="#blog">Blog</a>
+                <a href="faq.html">FAQ</a>
             </nav>
             <div class="header-actions">
                 <a href="auth.html" class="login-link">Login</a>
@@ -49,7 +48,7 @@
                         </svg>
                     </div>
                     <h1>Premium Software Designed for Saving Time and Increasing Sales</h1>
-                    <p>CloseLogic is the CRM built specifically for realtors. Our OpenAI-powered system analyzes every email interaction to gauge buyer interest, property preferences, and urgency—giving you a lead intent score from 1-100 so you know exactly who to prioritize.</p>
+                    <p>CloseLogic is a CRM built specifically for real estate professionals. Our intelligent analysis engine evaluates every email interaction to identify buyer intent, property preferences, and urgency—delivering a clear 1–100 lead score so you know exactly where to focus your time.</p>
                     <div class="hero-buttons">
                         <a href="auth.html" class="btn btn-primary btn-large">Start Free Trial</a>
                         <button class="btn btn-outline btn-large">Watch Demo</button>
@@ -304,10 +303,9 @@
                         <a href="#">Status</a>
                     </div>
                     <div class="footer-column">
-                        <h4>Follow Us</h4>
-                        <a href="#">Twitter</a>
-                        <a href="#">LinkedIn</a>
-                        <a href="#">Facebook</a>
+                        <h4>Legal</h4>
+                        <a href="privacy.html">Privacy Policy</a>
+                        <a href="terms.html">Terms of Service</a>
                     </div>
                 </div>
                 <div class="footer-copyright">
@@ -321,6 +319,10 @@
         </div>
     </footer>
 
+    <!-- Auth redirect for signed-in users -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./config.js"></script>
+    <script src="./index-auth-redirect.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

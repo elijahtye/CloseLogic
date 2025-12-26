@@ -230,19 +230,34 @@ Content-Type: application/json
 # Install dependencies
 npm install
 
-# Run with Vercel CLI
-vercel dev
+# Pull env vars once (recommended)
+vercel login
+vercel link
+vercel env pull .env.local
 
-# Or use Python HTTP server (for frontend only)
-python3 -m http.server 5000
+# IMPORTANT: After setting/changing .env.local, restart the local server
+
+# STEP 1: Start the API server first
+# This serves both static files AND /api/* endpoints on http://localhost:5001
+npm run dev:local
+# Or restart if already running:
+npm run dev:restart
+
+# STEP 2: Open the frontend in your browser
+# Navigate to: http://localhost:5001/dashboard.html
+# The frontend will automatically detect the API server at the same origin
+
+# If you need to use a different API server URL (e.g., separate frontend/backend):
+# Set window.API_BASE_URL before loading dashboard.js:
+# <script>window.API_BASE_URL = 'http://localhost:5001';</script>
 ```
 
 ### Testing
 
 1. Sign up/login with Google OAuth
 2. Complete onboarding flow
-3. View dashboard (will show mock data)
-4. When messages are created via `/api/messages`, analysis runs automatically
+3. View dashboard (loads leads/messages from Supabase)
+4. When inbound messages are created via `/api/messages`, analysis runs automatically (server-side)
 5. Check dashboard for updated scores and recommendations
 
 ## Troubleshooting
@@ -264,7 +279,7 @@ python3 -m http.server 5000
 
 ## Security Notes
 
-- ✅ Never commit `config.js` with real keys (use environment variables in production)
+- ✅ Supabase anon key in `config.js` is public by design; do not place service role keys in frontend code
 - ✅ `SUPABASE_SERVICE_ROLE_KEY` should only be in Vercel environment variables
 - ✅ `OPENAI_API_KEY` should only be in Vercel environment variables
 - ✅ RLS policies enforce user data isolation

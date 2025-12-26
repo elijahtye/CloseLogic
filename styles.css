@@ -53,20 +53,56 @@ body {
     font-weight: bold;
 }
 
-.logo-icon {
+.logo-image {
     width: 40px;
     height: 40px;
-    background: var(--gold);
-    color: var(--white);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
+    display: block;
+    object-fit: contain;
 }
 
 .logo-text {
     color: var(--text-dark);
+}
+
+/* Tier-gated UI (locked feature overlay) */
+.feature-locked {
+    position: relative;
+    opacity: 0.55;
+    filter: grayscale(0.15);
+}
+
+.feature-locked::after {
+    content: "";
+    position: absolute;
+    inset: -6px -8px;
+    background: rgba(156, 163, 175, 0.18); /* gray-400 w/ transparency */
+    border: 1px solid rgba(156, 163, 175, 0.28);
+    border-radius: 10px;
+    pointer-events: none;
+}
+
+.feature-locked::before {
+    content: "";
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    width: 16px;
+    height: 16px;
+    transform: translateY(-50%);
+    opacity: 0.75;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    /* inline SVG lock icon */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none'%3E%3Cpath d='M7 11V8a5 5 0 0 1 10 0v3' stroke='%236b7280' stroke-width='2' stroke-linecap='round'/%3E%3Cpath d='M7 11h10a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2Z' stroke='%236b7280' stroke-width='2'/%3E%3Cpath d='M12 16v2' stroke='%236b7280' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.locked-clickable {
+    cursor: pointer;
+}
+
+.locked-clickable:hover {
+    opacity: 0.65;
 }
 
 .nav {
