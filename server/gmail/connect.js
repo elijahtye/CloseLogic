@@ -68,7 +68,7 @@ export default async function handler(req, res) {
         
         // Get returnTo from body
         const body = req.body || {};
-        const returnTo = body.returnTo || '/dashboard.html';
+        const returnTo = body.returnTo || '/dashboard';
         
         // Validate env vars
         const clientId = process.env.GOOGLE_CLIENT_ID;

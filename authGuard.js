@@ -16,7 +16,7 @@ async function checkAuthAndOnboarding(options = {}) {
     if (typeof window.getSupabaseClient !== 'function') {
         console.error('[authGuard] getSupabaseClient not available (check script order: config.js must load first)');
         if (requireAuth) {
-            window.location.href = 'auth.html';
+            window.location.href = '/auth';
         }
         return null;
     }
@@ -27,7 +27,7 @@ async function checkAuthAndOnboarding(options = {}) {
     } catch (error) {
         console.error('[authGuard] Supabase init failed:', error);
         if (requireAuth) {
-            window.location.href = 'auth.html';
+            window.location.href = '/auth';
         }
         return null;
     }
@@ -37,7 +37,7 @@ async function checkAuthAndOnboarding(options = {}) {
     if (!session || !session.user) {
         console.log('[authGuard] No session');
         if (requireAuth) {
-            window.location.href = 'auth.html';
+            window.location.href = '/auth';
         }
         return null;
     }
@@ -50,13 +50,13 @@ async function checkAuthAndOnboarding(options = {}) {
     
     if (!profile) {
         if (requireOnboarding) {
-            window.location.href = 'onboarding.html';
+            window.location.href = '/onboarding';
         }
         return { session, profile: null };
     }
     
     if (redirectIfOnboarded && profile.onboarding_completed === true) {
-        window.location.href = 'dashboard.html';
+        window.location.href = '/dashboard';
         return { session, profile };
     }
 

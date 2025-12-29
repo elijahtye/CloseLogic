@@ -171,8 +171,8 @@ async function handleGoogleSignIn() {
     }
     
     try {
-        // Get the redirect URL (current page origin + /auth.html for callback handling)
-        const redirectTo = `${window.location.origin}/auth.html`;
+        // Get the redirect URL (current page origin + /auth for callback handling)
+        const redirectTo = `${window.location.origin}/auth`;
         
         // Sign in with Google OAuth (PKCE flow)
         const { data, error } = await supabaseClient.auth.signInWithOAuth({

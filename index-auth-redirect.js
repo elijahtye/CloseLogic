@@ -19,14 +19,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         .maybeSingle();
 
       if (profile && profile.onboarding_completed !== true) {
-        window.location.href = 'onboarding.html';
+        window.location.href = '/onboarding';
         return;
       }
     } catch (_) {
       // ignore and fall through
     }
 
-    window.location.href = 'dashboard.html';
+    window.location.href = '/dashboard';
   } catch (e) {
     console.error('[index] auth redirect check failed:', e?.message || e);
   }

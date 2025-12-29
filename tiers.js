@@ -77,7 +77,7 @@ async function setPlan(supabaseClient, userId, plan) {
 
 function getReturnTo() {
   const url = new URL(window.location.href);
-  return url.searchParams.get('returnTo') || '/dashboard.html';
+  return url.searchParams.get('returnTo') || '/dashboard';
 }
 
 function goBack() {
@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser();
     if (userError || !user) {
-      window.location.href = 'auth.html';
+      window.location.href = '/auth';
       return;
     }
 

@@ -109,7 +109,7 @@ function handleTierSelection(tierId, tierPrice) {
     // When Stripe is integrated, this will initiate checkout
     if (tierId === 'viewer') {
         // Free tier - redirect to signup
-        window.location.href = `auth.html?tier=${tierId}`;
+        window.location.href = `/auth?tier=${tierId}`;
     } else {
         // Paid tiers - will redirect to Stripe checkout when integrated
         // For now, redirect to signup with tier preference
@@ -120,7 +120,7 @@ function handleTierSelection(tierId, tierPrice) {
         // initiateStripeCheckout(tier.stripePriceId, tierId);
         
         // Temporary: redirect to signup
-        window.location.href = `auth.html?tier=${tierId}`;
+        window.location.href = `/auth?tier=${tierId}`;
     }
 }
 

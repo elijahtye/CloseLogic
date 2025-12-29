@@ -171,7 +171,7 @@ export default async function handler(req, res) {
         const error = req.query?.error || (req.url ? new URL(req.url, `http://${req.headers.host || 'localhost'}`).searchParams.get('error') : null);
         
         const appUrl = (process.env.APP_URL || 'http://localhost:5001').replace(/\/$/, ''); // Remove trailing slash
-        const returnTo = '/dashboard.html';
+        const returnTo = '/dashboard';
         
         // Handle OAuth errors from Google
         if (error) {
@@ -329,7 +329,7 @@ export default async function handler(req, res) {
             stack: error.stack
         });
         const appUrl = (process.env.APP_URL || 'http://localhost:5001').replace(/\/$/, '');
-        const errorUrl = `${appUrl}/dashboard.html?gmail_error=${encodeURIComponent(error.message || 'Unknown error')}`;
+        const errorUrl = `${appUrl}/dashboard?gmail_error=${encodeURIComponent(error.message || 'Unknown error')}`;
         if (typeof res.redirect === 'function') {
             return res.redirect(errorUrl);
         }

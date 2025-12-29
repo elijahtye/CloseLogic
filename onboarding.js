@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         supabaseClient = window.getSupabaseClient();
     } catch (e) {
         console.error('[onboarding] Supabase init failed:', e);
-        window.location.href = 'auth.html';
+        window.location.href = '/auth';
         return;
     }
 
@@ -273,7 +273,7 @@ async function saveOnboardingData() {
 
 function redirectToDashboard() {
     // Redirect to dashboard
-    window.location.href = 'dashboard.html';
+    window.location.href = '/dashboard';
 }
 
 /**

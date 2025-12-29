@@ -156,7 +156,7 @@ function promptUpgrade(featureKey) {
     const msg = upgradeMessage(featureKey);
     try { showToast(msg, 'info'); } catch {}
     const ok = confirm(`${msg}\n\nGo to Tiers to upgrade?`);
-    if (ok) window.location.href = 'tiers.html?returnTo=/dashboard.html';
+    if (ok) window.location.href = '/tiers?returnTo=/dashboard';
 }
 
 function setLocked(el, locked, featureKey) {
@@ -265,7 +265,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
         } catch (e) {
             console.error('[dashboard] Supabase init failed:', e);
-            window.location.href = 'auth.html';
+            window.location.href = '/auth';
             return;
         }
         
@@ -856,7 +856,7 @@ function initializeDashboard() {
     }
     
     // Set up logout
-    const logoutLink = userMenuDropdown?.querySelector('a[href="index.html"]');
+    const logoutLink = userMenuDropdown?.querySelector('a[href="/"]');
     if (logoutLink) {
         logoutLink.addEventListener('click', async function(e) {
             e.preventDefault();
@@ -1166,7 +1166,7 @@ async function setupEventListeners() {
         });
         $('manageSubscriptionBtn')?.addEventListener('click', async () => {
             // Go to dedicated tiers page
-            window.location.href = 'tiers.html?returnTo=/dashboard.html';
+            window.location.href = '/tiers?returnTo=/dashboard';
         });
 
         // (tiers modal removed; tiers managed via tiers.html)
@@ -3831,7 +3831,7 @@ async function connectGmail() {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    returnTo: '/dashboard.html'
+                    returnTo: '/dashboard'
                 })
             });
         } catch (authError) {

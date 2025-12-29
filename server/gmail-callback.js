@@ -177,13 +177,13 @@ export default async function handler(req, res) {
         // Handle OAuth errors
         if (error) {
             console.error('[gmail-callback] OAuth error:', error);
-            return redirect(`/dashboard.html?gmail_error=${encodeURIComponent(error)}`);
+            return redirect(`/dashboard?gmail_error=${encodeURIComponent(error)}`);
         }
         
         // Validate code
         if (!code) {
             console.error('[gmail-callback] No authorization code provided');
-            return redirect('/dashboard.html?gmail_error=no_code');
+            return redirect('/dashboard?gmail_error=no_code');
         }
         
         // Decode state to get user_id
@@ -197,7 +197,7 @@ export default async function handler(req, res) {
             }
         } catch (stateError) {
             console.error('[gmail-callback] Invalid state parameter:', stateError);
-            return redirect('/dashboard.html?gmail_error=invalid_state');
+            return redirect('/dashboard?gmail_error=invalid_state');
         }
         
         // Validate user_id exists
@@ -206,7 +206,7 @@ export default async function handler(req, res) {
         
         if (!supabaseUrl || !supabaseServiceKey) {
             console.error('[gmail-callback] Supabase configuration missing');
-            return redirect('/dashboard.html?gmail_error=config_error');
+            return redirect('/dashboard?gmail_error=config_error');
         }
         
         const supabase = createClient(supabaseUrl, supabaseServiceKey, {
@@ -225,7 +225,7 @@ export default async function handler(req, res) {
         
         if (userError || !user) {
             console.error('[gmail-callback] User not found:', { userId, error: userError });
-            return redirect('/dashboard.html?gmail_error=user_not_found');
+            return redirect('/dashboard?gmail_error=user_not_found');
         }
         
         // Exchange code for tokens
@@ -241,7 +241,7 @@ export default async function handler(req, res) {
             console.log('[gmail-callback] Token exchange successful');
         } catch (tokenError) {
             console.error('[gmail-callback] Token exchange error:', tokenError);
-            return redirect(`/dashboard.html?gmail_error=${encodeURIComponent(tokenError.message)}`);
+            return redirect(`/dashboard?gmail_error=${encodeURIComponent(tokenError.message)}`);
         }
         
         // Get user email from Gmail API
@@ -261,11 +261,11 @@ export default async function handler(req, res) {
             console.log('[gmail-callback] Email account saved successfully');
         } catch (upsertError) {
             console.error('[gmail-callback] Failed to save email account:', upsertError);
-            return redirect(`/dashboard.html?gmail_error=${encodeURIComponent(upsertError.message)}`);
+            return redirect(`/dashboard?gmail_error=${encodeURIComponent(upsertError.message)}`);
         }
         
         // Redirect to dashboard with success
-        return redirect('/dashboard.html?gmail_connected=true');
+        return redirect('/dashboard?gmail_connected=true');
         
     } catch (error) {
         console.error('[gmail-callback] Unexpected error:', {
@@ -273,7 +273,7 @@ export default async function handler(req, res) {
             stack: error.stack
         });
         res.statusCode = 302;
-        res.setHeader('Location', `/dashboard.html?gmail_error=${encodeURIComponent(error.message || 'Unknown error')}`);
+        res.setHeader('Location', `/dashboard?gmail_error=${encodeURIComponent(error.message || 'Unknown error')}`);
         return res.end();
     }
 }
