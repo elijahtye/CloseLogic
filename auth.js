@@ -171,8 +171,14 @@ async function handleGoogleSignIn() {
     }
     
     try {
-        // Get the redirect URL (current page origin + /auth for callback handling)
-        const redirectTo = `${window.location.origin}/auth`;
+        // Get the redirect URL for callback handling.
+        // IMPORTANT: Supabase will only redirect to allowlisted URLs. If a user visits
+        // closelogic.net (non-www) but only www.closelogic.net is allowlisted, Supabase
+        // can fall back to its configured Site URL (often localhost). Canonicalize.
+        const hostname = (window.location.hostname || '').toLowerCase();
+        const isCloseLogicDomain = hostname === 'closelogic.net' || hostname === 'www.closelogic.net';
+        const canonicalOrigin = isCloseLogicDomain ? 'https://www.closelogic.net' : window.location.origin;
+        const redirectTo = `${canonicalOrigin}/auth`;
         
         // Sign in with Google OAuth (PKCE flow)
         const { data, error } = await supabaseClient.auth.signInWithOAuth({
