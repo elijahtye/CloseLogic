@@ -62,7 +62,7 @@ async function checkAuthAndOnboarding(options = {}) {
 
     // Check onboarding status
     if (requireOnboarding && profile.onboarding_completed !== true) {
-        window.location.href = 'onboarding.html';
+        window.location.href = '/onboarding';
         return { session, profile };
     }
     
@@ -147,16 +147,16 @@ async function redirectAfterLogin() {
     const supabaseClient = window.getSupabaseClient();
     const session = await resolveSession(supabaseClient, 2000);
     if (!session || !session.user) {
-        window.location.href = 'auth.html';
+        window.location.href = '/auth';
         return;
     }
     await ensureProfile(supabaseClient, session.user);
     const profile = await fetchProfile(supabaseClient, session.user.id);
     if (!profile || profile.onboarding_completed !== true) {
-        window.location.href = 'onboarding.html';
+        window.location.href = '/onboarding';
         return;
     }
-    window.location.href = 'dashboard.html';
+    window.location.href = '/dashboard';
 }
 
 window.authGuard = {

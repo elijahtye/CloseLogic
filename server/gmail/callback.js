@@ -170,25 +170,31 @@ export default async function handler(req, res) {
         const state = req.query?.state || (req.url ? new URL(req.url, `http://${req.headers.host || 'localhost'}`).searchParams.get('state') : null);
         const error = req.query?.error || (req.url ? new URL(req.url, `http://${req.headers.host || 'localhost'}`).searchParams.get('error') : null);
         
-        const appUrl = (process.env.APP_URL || 'http://localhost:5001').replace(/\/$/, ''); // Remove trailing slash
+        // Detect app URL from request headers (for production) or use env/localhost fallback
+        const protocol = req.headers['x-forwarded-proto'] || (req.headers.host?.includes('localhost') ? 'http' : 'https');
+        const host = req.headers.host || req.headers['x-forwarded-host'];
+        const appUrl = process.env.APP_URL || 
+                      (host ? `${protocol}://${host}`.replace(/\/$/, '') : null) ||
+                      'http://localhost:5001';
+        const cleanAppUrl = appUrl.replace(/\/$/, ''); // Remove trailing slash
         const returnTo = '/dashboard';
         
         // Handle OAuth errors from Google
         if (error) {
             console.error('[gmail-callback] OAuth error from Google:', error);
-            return redirect(`${appUrl}${returnTo}?gmail_error=${encodeURIComponent(error)}`);
+            return redirect(`${cleanAppUrl}${returnTo}?gmail_error=${encodeURIComponent(error)}`);
         }
         
         // Validate code
         if (!code) {
             console.error('[gmail-callback] No authorization code provided');
-            return redirect(`${appUrl}${returnTo}?gmail_error=no_code`);
+            return redirect(`${cleanAppUrl}${returnTo}?gmail_error=no_code`);
         }
         
         // Validate and verify state
         if (!state) {
             console.error('[gmail-callback] No state parameter provided');
-            return redirect(`${appUrl}${returnTo}?gmail_error=no_state`);
+            return redirect(`${cleanAppUrl}${returnTo}?gmail_error=no_state`);
         }
         
         let statePayload;
@@ -196,7 +202,7 @@ export default async function handler(req, res) {
             statePayload = verifyState(state);
         } catch (stateError) {
             console.error('[gmail-callback] Invalid state:', stateError.message);
-            return redirect(`${appUrl}${returnTo}?gmail_error=invalid_state`);
+            return redirect(`${cleanAppUrl}${returnTo}?gmail_error=invalid_state`);
         }
         
         const userId = statePayload.user_id;
@@ -213,7 +219,7 @@ export default async function handler(req, res) {
         
         if (!redirectUri) {
             console.error('[gmail-callback] GOOGLE_REDIRECT_URI not configured');
-            return redirect(`${appUrl}${returnToFromState}?gmail_error=redirect_uri_missing`);
+            return redirect(`${cleanAppUrl}${returnToFromState}?gmail_error=redirect_uri_missing`);
         }
         
         // Exchange code for tokens
@@ -222,7 +228,7 @@ export default async function handler(req, res) {
             tokens = await exchangeCodeForTokens(code, redirectUri);
         } catch (tokenError) {
             console.error('[gmail-callback] Token exchange error:', tokenError.message);
-            return redirect(`${appUrl}${returnToFromState}?gmail_error=${encodeURIComponent(tokenError.message)}`);
+            return redirect(`${cleanAppUrl}${returnToFromState}?gmail_error=${encodeURIComponent(tokenError.message)}`);
         }
         
         // Get user email from Google
@@ -231,7 +237,7 @@ export default async function handler(req, res) {
             userInfo = await getUserEmail(tokens.access_token);
         } catch (infoError) {
             console.error('[gmail-callback] Failed to fetch user info:', infoError.message);
-            return redirect(`${appUrl}${returnToFromState}?gmail_error=${encodeURIComponent(infoError.message)}`);
+            return redirect(`${cleanAppUrl}${returnToFromState}?gmail_error=${encodeURIComponent(infoError.message)}`);
         }
         
         // Calculate expiry
@@ -292,7 +298,7 @@ export default async function handler(req, res) {
                     error: updateError.message,
                     error_code: updateError.code
                 });
-                return redirect(`${appUrl}${returnToFromState}?gmail_error=${encodeURIComponent(updateError.message)}`);
+                return redirect(`${cleanAppUrl}${returnToFromState}?gmail_error=${encodeURIComponent(updateError.message)}`);
             }
         } else {
             const { data: created, error: insertError } = await supabaseAdmin
@@ -305,7 +311,7 @@ export default async function handler(req, res) {
                     error: insertError?.message,
                     error_code: insertError?.code
                 });
-                return redirect(`${appUrl}${returnToFromState}?gmail_error=${encodeURIComponent(insertError?.message || 'Failed to save email account')}`);
+                return redirect(`${cleanAppUrl}${returnToFromState}?gmail_error=${encodeURIComponent(insertError?.message || 'Failed to save email account')}`);
             }
             emailAccountId = created.id;
         }
@@ -319,7 +325,7 @@ export default async function handler(req, res) {
         });
         
         // Redirect back to returnTo URL
-        const redirectTo = `${appUrl}${returnToFromState}?gmail=connected`;
+        const redirectTo = `${cleanAppUrl}${returnToFromState}?gmail=connected`;
         console.log('[gmail-callback] Redirecting back to app:', redirectTo);
         return redirect(redirectTo);
         
@@ -328,8 +334,14 @@ export default async function handler(req, res) {
             error: error.message,
             stack: error.stack
         });
-        const appUrl = (process.env.APP_URL || 'http://localhost:5001').replace(/\/$/, '');
-        const errorUrl = `${appUrl}/dashboard?gmail_error=${encodeURIComponent(error.message || 'Unknown error')}`;
+        // Use same logic for error redirect
+        const protocol = req.headers['x-forwarded-proto'] || (req.headers.host?.includes('localhost') ? 'http' : 'https');
+        const host = req.headers.host || req.headers['x-forwarded-host'];
+        const errorAppUrl = process.env.APP_URL || 
+                           (host ? `${protocol}://${host}`.replace(/\/$/, '') : null) ||
+                           'http://localhost:5001';
+        const cleanErrorAppUrl = errorAppUrl.replace(/\/$/, '');
+        const errorUrl = `${cleanErrorAppUrl}/dashboard?gmail_error=${encodeURIComponent(error.message || 'Unknown error')}`;
         if (typeof res.redirect === 'function') {
             return res.redirect(errorUrl);
         }
