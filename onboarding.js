@@ -235,6 +235,12 @@ async function saveOnboardingData() {
     }
     
     const userId = session.user.id;
+    const email = session.user.email || session.user.user_metadata?.email || null;
+    const fullName =
+        session.user.user_metadata?.full_name ||
+        session.user.user_metadata?.name ||
+        (email ? email.split('@')[0] : null) ||
+        null;
     console.log('[onboarding] Saving onboarding data for user:', userId);
     
     // Prepare update data
@@ -251,9 +257,14 @@ async function saveOnboardingData() {
     updateData.onboarding_completed_at = new Date().toISOString();
 
     // Upsert profile (avoids race condition if profile row doesn't exist yet)
-    const { data, error } = await supabase
+    if (!email) {
+        throw new Error('Missing user email in session; cannot create profile row');
+    }
+
+    const { data, error } = await supabaseClient
         .from('profiles')
-        .upsert({ id: userId, ...updateData }, { onConflict: 'id' })
+        // profiles.email is NOT NULL in prod schema; include it for first-time inserts
+        .upsert({ id: userId, email, full_name: fullName, ...updateData }, { onConflict: 'id' })
         .select()
         .single();
     
