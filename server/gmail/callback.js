@@ -34,13 +34,30 @@ function inferSiteUrl(req) {
 }
 
 function inferSiteUrl(req) {
+    // Prefer explicit env var if set
     const explicit = process.env.SITE_URL || process.env.APP_URL;
-    if (explicit) return String(explicit).replace(/\/$/, '');
+    if (explicit) {
+        const cleaned = String(explicit).replace(/\/$/, '');
+        // Remove any path components (should only be domain)
+        try {
+            const url = new URL(cleaned);
+            return `${url.protocol}//${url.host}`;
+        } catch {
+            return cleaned;
+        }
+    }
 
+    // Infer from request headers (Vercel provides these)
     const host = req.headers.host || req.headers['x-forwarded-host'];
     const proto = req.headers['x-forwarded-proto'] || (String(host || '').includes('localhost') ? 'http' : 'https');
-    if (host) return `${proto}://${host}`.replace(/\/$/, '');
+    
+    if (host) {
+        // Ensure host doesn't include path components
+        const cleanHost = String(host).split('/')[0].split('?')[0];
+        return `${proto}://${cleanHost}`;
+    }
 
+    // Fallback for local dev
     return 'http://localhost:5001';
 }
 
