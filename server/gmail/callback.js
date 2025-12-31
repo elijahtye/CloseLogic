@@ -5,31 +5,36 @@
 import { supabaseAdmin } from '../_utils/supabaseAdmin.js';
 import crypto from 'crypto';
 
-function inferSiteUrl(req) {
-    // Prefer explicit env var if set
-    const explicit = process.env.SITE_URL || process.env.APP_URL;
-    if (explicit) {
-        const cleaned = String(explicit).replace(/\/$/, '');
-        // Remove any path components (should only be domain)
-        try {
-            const url = new URL(cleaned);
-            return `${url.protocol}//${url.host}`;
-        } catch {
-            return cleaned;
-        }
+function isLocalUrl(u) {
+    const s = String(u || '').toLowerCase();
+    return s.includes('localhost') || s.includes('127.0.0.1');
+}
+
+function toOrigin(u) {
+    if (!u) return null;
+    try {
+        const parsed = new URL(String(u));
+        return `${parsed.protocol}//${parsed.host}`;
+    } catch {
+        return null;
+    }
+}
+
+function inferPublicOrigin(req) {
+    const xfHost = req.headers['x-forwarded-host'];
+    const host = (xfHost || req.headers.host || '').split(',')[0].trim();
+    const cleanHost = host.split('/')[0].split('?')[0];
+    const xfProto = req.headers['x-forwarded-proto'];
+    const proto = (xfProto || '').split(',')[0].trim() || (cleanHost.includes('localhost') ? 'http' : 'https');
+
+    if (cleanHost) {
+        const canonicalHost = cleanHost === 'closelogic.net' ? 'www.closelogic.net' : cleanHost;
+        return `${proto}://${canonicalHost}`;
     }
 
-    // Infer from request headers (Vercel provides these)
-    const host = req.headers.host || req.headers['x-forwarded-host'];
-    const proto = req.headers['x-forwarded-proto'] || (String(host || '').includes('localhost') ? 'http' : 'https');
-    
-    if (host) {
-        // Ensure host doesn't include path components
-        const cleanHost = String(host).split('/')[0].split('?')[0];
-        return `${proto}://${cleanHost}`;
-    }
+    const envOrigin = toOrigin(process.env.SITE_URL || process.env.APP_URL);
+    if (envOrigin && !isLocalUrl(envOrigin)) return envOrigin;
 
-    // Fallback for local dev
     return 'http://localhost:5001';
 }
 
@@ -257,9 +262,12 @@ export default async function handler(req, res) {
         });
         
         // Redirect URI must match what was used in /gmail/connect (and what is allowlisted in Google Cloud).
-        // Prefer explicit env var, but derive from request host if missing.
-        const baseUrl = inferSiteUrl(req);
-        const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${baseUrl}/api/gmail/callback`;
+        // Prefer env redirect only if it's not localhost; otherwise derive from request host.
+        const publicOrigin = inferPublicOrigin(req);
+        const envRedirect = process.env.GOOGLE_REDIRECT_URI;
+        const redirectUri = (envRedirect && !isLocalUrl(envRedirect))
+            ? envRedirect
+            : `${publicOrigin}/api/gmail/callback`;
         
         // Exchange code for tokens
         let tokens;

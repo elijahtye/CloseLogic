@@ -40,7 +40,9 @@ export function buildGmailOAuthUrl(userId, siteUrl = null, { callbackPath = '/ap
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     const base = (process.env.SITE_URL || process.env.APP_URL || siteUrl || '').toString().replace(/\/$/, '');
-    const redirectUri = process.env.GOOGLE_REDIRECT_URI || (base ? `${base}${callbackPath}` : null);
+    const envRedirect = process.env.GOOGLE_REDIRECT_URI || null;
+    const isLocal = (u) => String(u || '').toLowerCase().includes('localhost') || String(u || '').toLowerCase().includes('127.0.0.1');
+    const redirectUri = (envRedirect && !isLocal(envRedirect)) ? envRedirect : (base ? `${base}${callbackPath}` : null);
     
     // Validate required env vars
     if (!clientId) {

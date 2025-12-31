@@ -5,27 +5,39 @@
 import { validateSupabaseJwt } from '../lib/auth.js';
 import crypto from 'crypto';
 
-function inferSiteUrl(req) {
-    // Prefer explicit env var if set
-    const explicit = process.env.SITE_URL || process.env.APP_URL;
-    if (explicit) {
-        const cleaned = String(explicit).replace(/\/$/, '');
-        // Remove any path components (should only be domain)
-        const url = new URL(cleaned);
-        return `${url.protocol}//${url.host}`;
+function isLocalUrl(u) {
+    const s = String(u || '').toLowerCase();
+    return s.includes('localhost') || s.includes('127.0.0.1');
+}
+
+function toOrigin(u) {
+    if (!u) return null;
+    try {
+        const parsed = new URL(String(u));
+        return `${parsed.protocol}//${parsed.host}`;
+    } catch {
+        return null;
+    }
+}
+
+function inferPublicOrigin(req) {
+    // Prefer request host first (prevents accidental localhost env values from breaking prod)
+    const xfHost = req.headers['x-forwarded-host'];
+    const host = (xfHost || req.headers.host || '').split(',')[0].trim();
+    const cleanHost = host.split('/')[0].split('?')[0];
+    const xfProto = req.headers['x-forwarded-proto'];
+    const proto = (xfProto || '').split(',')[0].trim() || (cleanHost.includes('localhost') ? 'http' : 'https');
+
+    if (cleanHost) {
+        // Canonicalize CloseLogic domain to www for consistency
+        const canonicalHost = cleanHost === 'closelogic.net' ? 'www.closelogic.net' : cleanHost;
+        return `${proto}://${canonicalHost}`;
     }
 
-    // Infer from request headers (Vercel provides these)
-    const host = req.headers.host || req.headers['x-forwarded-host'];
-    const proto = req.headers['x-forwarded-proto'] || (String(host || '').includes('localhost') ? 'http' : 'https');
-    
-    if (host) {
-        // Ensure host doesn't include path components
-        const cleanHost = String(host).split('/')[0].split('?')[0];
-        return `${proto}://${cleanHost}`;
-    }
+    // Fall back to env, but only if it's not localhost.
+    const envOrigin = toOrigin(process.env.SITE_URL || process.env.APP_URL);
+    if (envOrigin && !isLocalUrl(envOrigin)) return envOrigin;
 
-    // Fallback for local dev
     return 'http://localhost:5001';
 }
 
@@ -96,7 +108,11 @@ export default async function handler(req, res) {
         
         // Validate env vars
         const clientId = process.env.GOOGLE_CLIENT_ID;
-        const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${inferSiteUrl(req)}/api/gmail/callback`;
+        const publicOrigin = inferPublicOrigin(req);
+        const envRedirect = process.env.GOOGLE_REDIRECT_URI;
+        const redirectUri = (envRedirect && !isLocalUrl(envRedirect))
+            ? envRedirect
+            : `${publicOrigin}/api/gmail/callback`;
         
         if (!clientId) {
             console.error('[gmail-connect] Missing GOOGLE_CLIENT_ID');
@@ -117,7 +133,9 @@ export default async function handler(req, res) {
             client_id_looks_like_google: clientIdStr.endsWith('.apps.googleusercontent.com'),
             client_id_core_tail12: clientIdCore.slice(-12),
             redirect_uri_present: !!redirectUri,
-            redirect_uri: redirectUri
+            redirect_uri: redirectUri,
+            inferred_origin: publicOrigin,
+            used_env_redirect: !!(envRedirect && !isLocalUrl(envRedirect))
         });
         
         // Create signed state
