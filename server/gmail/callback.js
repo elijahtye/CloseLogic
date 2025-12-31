@@ -184,10 +184,24 @@ export default async function handler(req, res) {
         // Detect app URL from request headers (for production) or use env/localhost fallback
         const protocol = req.headers['x-forwarded-proto'] || (req.headers.host?.includes('localhost') ? 'http' : 'https');
         const host = req.headers.host || req.headers['x-forwarded-host'];
+        
+        // Helper to clean URL (remove path, query, trailing slash)
+        function cleanBaseUrl(url) {
+            if (!url) return null;
+            try {
+                const parsed = new URL(url);
+                return `${parsed.protocol}//${parsed.host}`;
+            } catch {
+                // If URL parsing fails, try manual cleanup
+                const cleaned = String(url).replace(/\/$/, '').split('/').slice(0, 3).join('/');
+                return cleaned.includes('://') ? cleaned : null;
+            }
+        }
+        
         const appUrl = process.env.APP_URL || 
-                      (host ? `${protocol}://${host}`.replace(/\/$/, '') : null) ||
+                      (host ? cleanBaseUrl(`${protocol}://${host}`) : null) ||
                       'http://localhost:5001';
-        const cleanAppUrl = appUrl.replace(/\/$/, ''); // Remove trailing slash
+        const cleanAppUrl = cleanBaseUrl(appUrl) || appUrl.replace(/\/$/, '');
         const returnTo = '/dashboard';
         
         // Handle OAuth errors from Google
