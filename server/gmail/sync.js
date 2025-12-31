@@ -30,6 +30,38 @@ function pickExpiry(emailAccount) {
     return emailAccount?.token_expires_at || emailAccount?.expires_at || null;
 }
 
+async function readJsonBody(req, { maxBytes = 100_000 } = {}) {
+    // Vercel may pre-parse req.body; if not, read stream.
+    if (req?.body && typeof req.body === 'object') return req.body;
+    if (typeof req?.body === 'string') {
+        try { return JSON.parse(req.body); } catch { return {}; }
+    }
+    const contentType = req.headers?.['content-type'] || req.headers?.get?.('content-type') || '';
+    if (!String(contentType).toLowerCase().includes('application/json')) return {};
+    const chunks = [];
+    let bytes = 0;
+    await new Promise((resolve) => {
+        req.on('data', (c) => {
+            bytes += c.length || 0;
+            if (bytes > maxBytes) {
+                // Stop reading if body is too large; treat as empty.
+                try { req.destroy(); } catch {}
+                resolve();
+                return;
+            }
+            chunks.push(c);
+        });
+        req.on('end', resolve);
+        req.on('error', resolve);
+    });
+    if (!chunks.length) return {};
+    try {
+        return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+    } catch {
+        return {};
+    }
+}
+
 /**
  * Refresh access token if expired
  */
@@ -103,6 +135,7 @@ export default async function handler(req, res) {
         }
         
         console.log('[gmail-sync] User authenticated:', authResult.userId);
+        const body = await readJsonBody(req);
         
         // Ensure migration is applied (messages.gmail_message_id exists)
         {
@@ -125,7 +158,7 @@ export default async function handler(req, res) {
         // Load email_account with tokens
         const { data: emailAccount, error: accountError } = await supabaseAdmin
             .from('email_accounts')
-            .select('id, status, email_address, access_token, refresh_token, token_expires_at, expires_at')
+            .select('id, status, email_address, access_token, refresh_token, token_expires_at, expires_at, last_sync_at')
             .eq('user_id', authResult.userId)
             .eq('provider', 'gmail')
             .maybeSingle();
@@ -211,13 +244,20 @@ export default async function handler(req, res) {
             }
         }
         
-        // Fetch the most recent 50 inbox messages and upsert into leads/messages
+        // Fetch inbox messages and upsert into leads/messages.
+        // Requirement: for a newly connected user (no last_sync_at yet), only pull the 50 most recent.
+        const isInitialSync = !emailAccount?.last_sync_at;
+        const requestedMax = Number.isFinite(Number(body?.maxResults)) ? Number(body.maxResults) : null;
+        const maxResults = isInitialSync
+            ? 50
+            : (requestedMax ? Math.min(Math.max(requestedMax, 1), 200) : 50);
+
         let insertedMessages = 0;
         let skippedMessages = 0;
         let insertedLeads = 0;
         let updatedLeads = 0;
         try {
-            const listUrl = 'https://www.googleapis.com/gmail/v1/users/me/messages?q=in%3Ainbox&maxResults=50';
+            const listUrl = `https://www.googleapis.com/gmail/v1/users/me/messages?q=in%3Ainbox&maxResults=${encodeURIComponent(String(maxResults))}`;
             const listResp = await fetch(listUrl, {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             });
