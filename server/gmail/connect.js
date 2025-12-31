@@ -5,6 +5,18 @@
 import { validateSupabaseJwt } from '../lib/auth.js';
 import crypto from 'crypto';
 
+function inferSiteUrl(req) {
+    // Prefer explicit env var if set
+    const explicit = process.env.SITE_URL || process.env.APP_URL;
+    if (explicit) return String(explicit).replace(/\/$/, '');
+
+    const host = req.headers.host || req.headers['x-forwarded-host'];
+    const proto = req.headers['x-forwarded-proto'] || (String(host || '').includes('localhost') ? 'http' : 'https');
+    if (host) return `${proto}://${host}`.replace(/\/$/, '');
+
+    return 'http://localhost:5001';
+}
+
 /**
  * Sign state payload with HMAC
  */
@@ -72,21 +84,13 @@ export default async function handler(req, res) {
         
         // Validate env vars
         const clientId = process.env.GOOGLE_CLIENT_ID;
-        const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+        const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${inferSiteUrl(req)}/api/gmail/callback`;
         
         if (!clientId) {
             console.error('[gmail-connect] Missing GOOGLE_CLIENT_ID');
             return res.status(500).json({
                 success: false,
                 error: 'Missing env var: GOOGLE_CLIENT_ID'
-            });
-        }
-        
-        if (!redirectUri) {
-            console.error('[gmail-connect] Missing GOOGLE_REDIRECT_URI');
-            return res.status(500).json({
-                success: false,
-                error: 'Missing env var: GOOGLE_REDIRECT_URI'
             });
         }
 
@@ -100,7 +104,8 @@ export default async function handler(req, res) {
             client_id_has_quotes: /["']/.test(clientIdStr),
             client_id_looks_like_google: clientIdStr.endsWith('.apps.googleusercontent.com'),
             client_id_core_tail12: clientIdCore.slice(-12),
-            redirect_uri_present: true
+            redirect_uri_present: !!redirectUri,
+            redirect_uri: redirectUri
         });
         
         // Create signed state

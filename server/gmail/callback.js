@@ -5,6 +5,17 @@
 import { supabaseAdmin } from '../_utils/supabaseAdmin.js';
 import crypto from 'crypto';
 
+function inferSiteUrl(req) {
+    const explicit = process.env.SITE_URL || process.env.APP_URL;
+    if (explicit) return String(explicit).replace(/\/$/, '');
+
+    const host = req.headers.host || req.headers['x-forwarded-host'];
+    const proto = req.headers['x-forwarded-proto'] || (String(host || '').includes('localhost') ? 'http' : 'https');
+    if (host) return `${proto}://${host}`.replace(/\/$/, '');
+
+    return 'http://localhost:5001';
+}
+
 /**
  * Verify and decode HMAC-signed state
  */
@@ -214,13 +225,9 @@ export default async function handler(req, res) {
             has_code: !!code
         });
         
-        // Validate environment variables
-        const redirectUri = process.env.GOOGLE_REDIRECT_URI;
-        
-        if (!redirectUri) {
-            console.error('[gmail-callback] GOOGLE_REDIRECT_URI not configured');
-            return redirect(`${cleanAppUrl}${returnToFromState}?gmail_error=redirect_uri_missing`);
-        }
+        // Redirect URI must match what was used in /gmail/connect (and what is allowlisted in Google Cloud).
+        // Prefer explicit env var, but derive from request host if missing.
+        const redirectUri = process.env.GOOGLE_REDIRECT_URI || `${inferSiteUrl(req)}/api/gmail/callback`;
         
         // Exchange code for tokens
         let tokens;

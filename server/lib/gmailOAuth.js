@@ -36,10 +36,11 @@ export async function validateUserAuth(req) {
 /**
  * Build Google OAuth URL
  */
-export function buildGmailOAuthUrl(userId) {
+export function buildGmailOAuthUrl(userId, siteUrl = null, { callbackPath = '/api/gmail-callback' } = {}) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+    const base = (process.env.SITE_URL || process.env.APP_URL || siteUrl || '').toString().replace(/\/$/, '');
+    const redirectUri = process.env.GOOGLE_REDIRECT_URI || (base ? `${base}${callbackPath}` : null);
     
     // Validate required env vars
     if (!clientId) {
