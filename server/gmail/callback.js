@@ -197,51 +197,68 @@ export default async function handler(req, res) {
             res.setHeader('Location', url);
             res.end();
         };
+
+        // IMPORTANT: Always redirect using a relative path (same-origin) to avoid any accidental
+        // APP_URL/SITE_URL localhost values causing redirects to localhost in production.
+        function sanitizeReturnTo(value, fallback = '/dashboard') {
+            try {
+                if (!value || typeof value !== 'string') return fallback;
+                const v = value.trim();
+                if (!v) return fallback;
+
+                // If absolute URL, strip origin.
+                if (v.startsWith('http://') || v.startsWith('https://')) {
+                    const u = new URL(v);
+                    return sanitizeReturnTo(u.pathname + (u.search || ''), fallback);
+                }
+
+                // Ensure leading slash
+                let path = v.startsWith('/') ? v : `/${v}`;
+
+                // Normalize legacy .html routes
+                path = path.replace(/\/dashboard\.html\b/i, '/dashboard');
+                path = path.replace(/\/onboarding\.html\b/i, '/onboarding');
+                path = path.replace(/\/tiers\.html\b/i, '/tiers');
+                path = path.replace(/\/auth\.html\b/i, '/auth');
+
+                // Prevent protocol-relative or other weirdness
+                if (path.startsWith('//')) return fallback;
+                return path.slice(0, 500);
+            } catch {
+                return fallback;
+            }
+        }
+
+        function withQueryParam(path, key, value) {
+            const base = 'http://local';
+            const u = new URL(path, base);
+            u.searchParams.set(key, value);
+            return u.pathname + u.search;
+        }
         
         // Parse query parameters
         const code = req.query?.code || (req.url ? new URL(req.url, `http://${req.headers.host || 'localhost'}`).searchParams.get('code') : null);
         const state = req.query?.state || (req.url ? new URL(req.url, `http://${req.headers.host || 'localhost'}`).searchParams.get('state') : null);
         const error = req.query?.error || (req.url ? new URL(req.url, `http://${req.headers.host || 'localhost'}`).searchParams.get('error') : null);
-        
-        // Detect app URL from request headers (for production) or use env/localhost fallback
-        const protocol = req.headers['x-forwarded-proto'] || (req.headers.host?.includes('localhost') ? 'http' : 'https');
-        const host = req.headers.host || req.headers['x-forwarded-host'];
-        
-        // Helper to clean URL (remove path, query, trailing slash)
-        function cleanBaseUrl(url) {
-            if (!url) return null;
-            try {
-                const parsed = new URL(url);
-                return `${parsed.protocol}//${parsed.host}`;
-            } catch {
-                // If URL parsing fails, try manual cleanup
-                const cleaned = String(url).replace(/\/$/, '').split('/').slice(0, 3).join('/');
-                return cleaned.includes('://') ? cleaned : null;
-            }
-        }
-        
-        const appUrl = process.env.APP_URL || 
-                      (host ? cleanBaseUrl(`${protocol}://${host}`) : null) ||
-                      'http://localhost:5001';
-        const cleanAppUrl = cleanBaseUrl(appUrl) || appUrl.replace(/\/$/, '');
         const returnTo = '/dashboard';
+        const safeDefaultReturnTo = sanitizeReturnTo(returnTo, '/dashboard');
         
         // Handle OAuth errors from Google
         if (error) {
             console.error('[gmail-callback] OAuth error from Google:', error);
-            return redirect(`${cleanAppUrl}${returnTo}?gmail_error=${encodeURIComponent(error)}`);
+            return redirect(withQueryParam(safeDefaultReturnTo, 'gmail_error', String(error)));
         }
         
         // Validate code
         if (!code) {
             console.error('[gmail-callback] No authorization code provided');
-            return redirect(`${cleanAppUrl}${returnTo}?gmail_error=no_code`);
+            return redirect(withQueryParam(safeDefaultReturnTo, 'gmail_error', 'no_code'));
         }
         
         // Validate and verify state
         if (!state) {
             console.error('[gmail-callback] No state parameter provided');
-            return redirect(`${cleanAppUrl}${returnTo}?gmail_error=no_state`);
+            return redirect(withQueryParam(safeDefaultReturnTo, 'gmail_error', 'no_state'));
         }
         
         let statePayload;
@@ -249,11 +266,12 @@ export default async function handler(req, res) {
             statePayload = verifyState(state);
         } catch (stateError) {
             console.error('[gmail-callback] Invalid state:', stateError.message);
-            return redirect(`${cleanAppUrl}${returnTo}?gmail_error=invalid_state`);
+            return redirect(withQueryParam(safeDefaultReturnTo, 'gmail_error', 'invalid_state'));
         }
         
         const userId = statePayload.user_id;
         const returnToFromState = statePayload.returnTo || returnTo;
+        const safeReturnTo = sanitizeReturnTo(returnToFromState, safeDefaultReturnTo);
         
         console.log('[gmail-callback] State verified, processing callback:', {
             user_id: userId,
@@ -275,7 +293,7 @@ export default async function handler(req, res) {
             tokens = await exchangeCodeForTokens(code, redirectUri);
         } catch (tokenError) {
             console.error('[gmail-callback] Token exchange error:', tokenError.message);
-            return redirect(`${cleanAppUrl}${returnToFromState}?gmail_error=${encodeURIComponent(tokenError.message)}`);
+            return redirect(withQueryParam(safeReturnTo, 'gmail_error', tokenError.message || 'token_exchange_failed'));
         }
         
         // Get user email from Google
@@ -284,7 +302,7 @@ export default async function handler(req, res) {
             userInfo = await getUserEmail(tokens.access_token);
         } catch (infoError) {
             console.error('[gmail-callback] Failed to fetch user info:', infoError.message);
-            return redirect(`${cleanAppUrl}${returnToFromState}?gmail_error=${encodeURIComponent(infoError.message)}`);
+            return redirect(withQueryParam(safeReturnTo, 'gmail_error', infoError.message || 'user_info_failed'));
         }
         
         // Calculate expiry
@@ -345,7 +363,7 @@ export default async function handler(req, res) {
                     error: updateError.message,
                     error_code: updateError.code
                 });
-                return redirect(`${cleanAppUrl}${returnToFromState}?gmail_error=${encodeURIComponent(updateError.message)}`);
+                return redirect(withQueryParam(safeReturnTo, 'gmail_error', updateError.message || 'db_update_failed'));
             }
         } else {
             const { data: created, error: insertError } = await supabaseAdmin
@@ -358,7 +376,7 @@ export default async function handler(req, res) {
                     error: insertError?.message,
                     error_code: insertError?.code
                 });
-                return redirect(`${cleanAppUrl}${returnToFromState}?gmail_error=${encodeURIComponent(insertError?.message || 'Failed to save email account')}`);
+                return redirect(withQueryParam(safeReturnTo, 'gmail_error', insertError?.message || 'Failed to save email account'));
             }
             emailAccountId = created.id;
         }
@@ -372,7 +390,7 @@ export default async function handler(req, res) {
         });
         
         // Redirect back to returnTo URL
-        const redirectTo = `${cleanAppUrl}${returnToFromState}?gmail=connected`;
+        const redirectTo = withQueryParam(safeReturnTo, 'gmail', 'connected');
         console.log('[gmail-callback] Redirecting back to app:', redirectTo);
         return redirect(redirectTo);
         
@@ -381,19 +399,7 @@ export default async function handler(req, res) {
             error: error.message,
             stack: error.stack
         });
-        // Use same logic for error redirect
-        const protocol = req.headers['x-forwarded-proto'] || (req.headers.host?.includes('localhost') ? 'http' : 'https');
-        const host = req.headers.host || req.headers['x-forwarded-host'];
-        const errorAppUrl = process.env.APP_URL || 
-                           (host ? `${protocol}://${host}`.replace(/\/$/, '') : null) ||
-                           'http://localhost:5001';
-        const cleanErrorAppUrl = errorAppUrl.replace(/\/$/, '');
-        const errorUrl = `${cleanErrorAppUrl}/dashboard?gmail_error=${encodeURIComponent(error.message || 'Unknown error')}`;
-        if (typeof res.redirect === 'function') {
-            return res.redirect(errorUrl);
-        }
-        res.statusCode = 302;
-        res.setHeader('Location', errorUrl);
-        return res.end();
+        const errorUrl = withQueryParam('/dashboard', 'gmail_error', error.message || 'Unknown error');
+        return redirect(errorUrl);
     }
 }
