@@ -95,10 +95,17 @@ export async function analyzeLead(leadId, userId, options = {}) {
         .single();
 
     if (!options.force && existingScore) {
+        // If this lead was previously analyzed before we supported market-based pricing,
+        // allow a re-analysis to populate pipeline fields when they are currently null.
+        const needsPricingBackfill =
+            (existingLead?.pipeline_value === null || existingLead?.pipeline_value === undefined) &&
+            (existingLead?.estimated_price_min === null || existingLead?.estimated_price_min === undefined) &&
+            (existingLead?.estimated_price_max === null || existingLead?.estimated_price_max === undefined);
+
         const scoreCreatedAt = existingScore.created_at ? new Date(existingScore.created_at) : null;
         const coversTrigger = scoreCreatedAt && triggerCreatedAt && scoreCreatedAt.getTime() >= triggerCreatedAt.getTime();
         const coversLatestInbound = scoreCreatedAt && latestInboundSentAt && scoreCreatedAt.getTime() >= latestInboundSentAt.getTime();
-        if (coversTrigger || coversLatestInbound) {
+        if ((coversTrigger || coversLatestInbound) && !needsPricingBackfill) {
             console.log('[AI_ANALYSIS] Returning existing score (idempotency)', { lead_id: leadId });
             return {
                 deal_probability: existingScore.deal_probability,
@@ -418,7 +425,7 @@ Return JSON with score, classification, confidence, reasoning, recommended_actio
         throw new Error(`Missing or invalid reasoning field: ${typeof reasoning}`);
     }
     
-    // Truncate reasoning if too long
+    // Truncate reasoning if too long (note: reasoning may be updated later)
     const truncatedReasoning = reasoning.length > 200 ? reasoning.substring(0, 200) : reasoning;
     
     // Ensure recommended_actions exists
@@ -426,6 +433,47 @@ Return JSON with score, classification, confidence, reasoning, recommended_actio
         analysis.recommended_actions = [];
     }
     
+    // If pricing fields are missing/null but the thread has strong property context,
+    // run a pricing-only estimation pass and compute pipeline_value deterministically.
+    const rawReasoning = (analysis.reasoning !== undefined ? analysis.reasoning : analysis.reason) || '';
+    const hasAnyPricing =
+        (analysis.estimated_price_min !== null && analysis.estimated_price_min !== undefined) ||
+        (analysis.estimated_price_max !== null && analysis.estimated_price_max !== undefined) ||
+        (analysis.pipeline_value !== null && analysis.pipeline_value !== undefined);
+
+    const shouldBackfillPricing = !hasAnyPricing && hasSufficientPropertyContext(conversationText);
+    if (shouldBackfillPricing) {
+        try {
+            const est = await estimateMarketPriceRange({
+                apiKey,
+                model,
+                leadContext,
+                conversationText
+            });
+
+            if (est?.estimated_price_min != null && est?.estimated_price_max != null) {
+                analysis.estimated_price_min = est.estimated_price_min;
+                analysis.estimated_price_max = est.estimated_price_max;
+
+                const leadScoreForPipeline = Math.round(analysis.score);
+                analysis.pipeline_value = computePipelineValue({
+                    score: leadScoreForPipeline,
+                    estimated_price_min: analysis.estimated_price_min,
+                    estimated_price_max: analysis.estimated_price_max
+                });
+
+                // Nudge reasoning to indicate the estimate is market-based (still <= 200 chars after truncation below)
+                analysis.reasoning = String(rawReasoning || '').trim()
+                    ? `${String(rawReasoning).trim()} (market-based est.)`
+                    : 'Market-based estimate from property context.';
+            }
+        } catch (e) {
+            console.warn('[AI_ANALYSIS] Market price backfill failed; leaving pipeline fields null', {
+                error: e?.message || String(e)
+            });
+        }
+    }
+
     // TASK A.4: Validate pipeline fields conditionally - STRICT validation
     const hasPricingInfo = analysis.estimated_price_min !== null && 
                           analysis.estimated_price_min !== undefined &&
@@ -560,6 +608,11 @@ Return JSON with score, classification, confidence, reasoning, recommended_actio
         analysis.pipeline_value = normalizedPipelineValue;
     }
     
+    const finalReasoningRaw = (analysis.reasoning !== undefined ? analysis.reasoning : analysis.reason) || truncatedReasoning || '';
+    const finalReasoning = String(finalReasoningRaw).length > 200
+        ? String(finalReasoningRaw).substring(0, 200)
+        : String(finalReasoningRaw);
+
     return {
         deal_probability: leadScore, // Keep for backward compatibility
         lead_score: leadScore,
@@ -569,9 +622,116 @@ Return JSON with score, classification, confidence, reasoning, recommended_actio
         estimated_price_max: analysis.estimated_price_max,
         pipeline_value: analysis.pipeline_value,
         confidence: analysis.confidence,
-        reason: truncatedReasoning,
+        reason: finalReasoning,
         recommended_actions: analysis.recommended_actions || []
     };
+}
+
+function hasSufficientPropertyContext(text) {
+    const t = String(text || '').toLowerCase();
+    const propertyType = /\b(condo|condominium|house|home|townhome|townhouse|apartment|villa|cabin|duplex|triplex|multi[-\s]?family|land|lot)\b/i.test(t);
+    const beds = /\b(\d+)\s*(bed|bedroom|br)\b/i.test(t) || /\bbedroom(s)?\b/i.test(t);
+    const baths = /\b(\d+)\s*(bath|bathroom|ba)\b/i.test(t) || /\bbath(room)?(s)?\b/i.test(t);
+    const features = /\b(oceanfront|waterfront|on the water|beachfront|mountain|ski|lakefront|golf)\b/i.test(t);
+    const hasLocationHint = /\bin\s+[a-z][a-z\s]{2,}\b/i.test(t) || /\bmyrtle beach\b/i.test(t);
+    const timeline = /\b(this month|next month|between\b|\bby\b|\bwithin\b|\bsoon\b|\bready\b|\b15th\b|\b25th\b)\b/i.test(t);
+
+    // Require property type + some descriptive detail; location hint helps prevent wild guessing.
+    return propertyType && (beds || baths || features || timeline) && hasLocationHint;
+}
+
+async function estimateMarketPriceRange({ apiKey, model, leadContext, conversationText }) {
+    const systemPrompt = `You are a real estate pricing assistant.
+Return ONLY valid JSON (no markdown).
+
+Estimate a reasonable market price range for the property described in the conversation.
+Rules:
+- If you cannot estimate from the info provided, return nulls.
+- Use WIDE ranges when uncertain.
+- Integers only, no $ and no commas.
+
+Output format:
+{
+  "estimated_price_min": <integer | null>,
+  "estimated_price_max": <integer | null>
+}`;
+
+    const userPrompt = `Lead context:
+${leadContext}
+
+Conversation:
+${conversationText}
+
+Estimate price range now.`;
+
+    const requestBody = {
+        model: model,
+        messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt }
+        ],
+        temperature: 0,
+        response_format: { type: 'json_object' }
+    };
+
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(requestBody)
+    });
+
+    if (!resp.ok) {
+        const errorText = await resp.text();
+        throw new Error(`OpenAI pricing estimate error ${resp.status}: ${errorText}`);
+    }
+
+    const data = await resp.json();
+    const content = data.choices[0]?.message?.content;
+    if (!content) throw new Error('No content from OpenAI pricing estimate');
+
+    let parsed;
+    try {
+        parsed = JSON.parse(content);
+    } catch (e) {
+        throw new Error(`Pricing estimate JSON parse failed: ${e.message}`);
+    }
+
+    let min = parsed.estimated_price_min;
+    let max = parsed.estimated_price_max;
+    if (typeof min === 'string') min = parseInt(min.replace(/[$,]/g, ''), 10);
+    if (typeof max === 'string') max = parseInt(max.replace(/[$,]/g, ''), 10);
+
+    if (min == null || max == null) return { estimated_price_min: null, estimated_price_max: null };
+    if (!Number.isFinite(min) || !Number.isFinite(max) || min <= 0 || max <= 0) return { estimated_price_min: null, estimated_price_max: null };
+    if (max < min) [min, max] = [max, min];
+
+    return { estimated_price_min: Math.round(min), estimated_price_max: Math.round(max) };
+}
+
+function computePipelineValue({ score, estimated_price_min, estimated_price_max }) {
+    const s = Math.max(0, Math.min(100, Number(score) || 0));
+    const min = Number(estimated_price_min);
+    const max = Number(estimated_price_max);
+    const midpoint = (min + max) / 2;
+
+    // Base EV
+    let pv = midpoint * (s / 100);
+    // Reduce false precision: nearest $1,000
+    pv = Math.round(pv / 1000) * 1000;
+
+    // Score-based caps (matching prompt rules)
+    if (s < 50) {
+        const cap = Math.round((midpoint * 0.30) / 1000) * 1000;
+        pv = Math.min(pv, cap);
+    } else if (s <= 79) {
+        const cap = Math.round((midpoint * 0.65) / 1000) * 1000;
+        pv = Math.min(pv, cap);
+    }
+
+    return Math.max(0, pv);
 }
 
 /**
