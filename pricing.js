@@ -81,14 +81,24 @@ function renderTierFeatureLists() {
         ul.innerHTML = pf.FEATURES.map((f) => {
             const available = pf.isFeatureAvailable(plan, f.key);
             const label = pf.featureLabelForPlan(f, plan);
-            const cls = available ? 'feature-item' : 'feature-item feature-locked';
+            const cls = available ? 'feature-item' : 'feature-item feature-locked locked-clickable';
             const stroke = available ? '#D4AF37' : '#9ca3af';
             const title = available ? '' : `Locked — requires ${String(f.minPlan || 'viewer').charAt(0).toUpperCase() + String(f.minPlan || 'viewer').slice(1)} tier`;
-            return `<li class="${cls}" ${title ? `title="${escapeHtml(title)}"` : ''}>
+            const dataAttr = available ? '' : `data-locked="true" data-min-plan="${escapeHtml(f.minPlan || 'viewer')}"`;
+            return `<li class="${cls}" ${title ? `title="${escapeHtml(title)}"` : ''} ${dataAttr}>
                 ${iconSvg(stroke)}
-                <span>${escapeHtml(label)}</span>
+                <span style="position: relative; z-index: 0;">${escapeHtml(label)}</span>
             </li>`;
         }).join('');
+        
+        // Add click handlers for locked features
+        ul.querySelectorAll('.feature-locked').forEach((li) => {
+            li.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.location.href = '/pricing';
+            });
+        });
     });
 }
 

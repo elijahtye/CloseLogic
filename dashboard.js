@@ -155,8 +155,8 @@ function upgradeMessage(featureKey) {
 function promptUpgrade(featureKey) {
     const msg = upgradeMessage(featureKey);
     try { showToast(msg, 'info'); } catch {}
-    const ok = confirm(`${msg}\n\nGo to Tiers to upgrade?`);
-    if (ok) window.location.href = '/tiers?returnTo=/dashboard';
+    // Automatically redirect to pricing page
+    window.location.href = '/pricing';
 }
 
 function setLocked(el, locked, featureKey) {
