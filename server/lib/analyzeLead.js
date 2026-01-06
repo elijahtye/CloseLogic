@@ -194,8 +194,8 @@ Source: ${lead.source || 'Unknown'}
 Last Message At: ${lead.last_message_at ? new Date(lead.last_message_at).toLocaleString() : 'N/A'}
 `;
     
-    const systemPrompt = `You are a real estate CRM assistant analyzing lead engagement and pricing intent.
-Analyze the conversation thread and determine lead score, classification, and conditional pipeline value estimation.
+    const systemPrompt = `You are a real estate CRM assistant analyzing lead engagement and pricing.
+Analyze the conversation thread and determine lead score, classification, and pipeline value estimation.
 
 CRITICAL: You MUST respond with ONLY valid JSON. No markdown, no code blocks, no explanations. Just pure JSON.
 
@@ -220,11 +220,11 @@ CRITICAL NUMERIC FORMAT RULES:
 - estimated_price_min and estimated_price_max MUST be integers with NO currency symbols ($) and NO commas
 - Example: 350000 (NOT "$350,000" or "350,000")
 - pipeline_value MUST be a number or null (NO currency symbols, NO commas)
-- If pricing information is present, ALL numeric fields MUST be present as numbers (NOT null)
-- If pricing information is NOT present, ALL numeric fields MUST be null
+- If you provide ANY price estimate, ALL numeric fields MUST be present as numbers (NOT null)
+- If you CANNOT reasonably estimate price from the thread, ALL numeric fields MUST be null
 
 PIPELINE ESTIMATION RULES (STRICT):
-Pipeline estimation may ONLY run if the email includes at least ONE of:
+You may ONLY estimate price/pipeline_value if the thread includes at least ONE of:
 - Property type (house, condo, townhome, etc.)
 - Bedroom count
 - Budget or price range
@@ -239,10 +239,14 @@ If NONE are present:
 - DO NOT create placeholders
 - DO NOT infer pricing
 
-If pricing information IS present:
-- Extract price range from conversation (MUST be explicit dollar amounts)
-- Set estimated_price_min and estimated_price_max as INTEGER numbers (no $, no commas)
-- Example: If message says "$350,000 to $450,000", return estimated_price_min: 350000, estimated_price_max: 450000
+PRICE ESTIMATION MODES:
+1) If the thread includes explicit dollar amounts (budget/price range), use those (EXPLICIT).
+2) If no explicit dollars are mentioned BUT there is sufficient property context (at minimum: location/area + property type AND at least one of beds/baths/timeline/features like waterfront), provide a MARKET-BASED estimate range.
+   - Use a WIDE range if uncertain.
+   - If only a single point estimate is possible, set min = max.
+   - Example: "3 bed 2 bath oceanfront condo in Myrtle Beach" → return a reasonable min/max range (market-based), not null.
+
+PIPELINE VALUE CALCULATION (applies to both explicit and market-based estimates):
 - IMPORTANT: pipeline_value is NOT an "ego number". It is an EXPECTED VALUE estimate that MUST align with score.
   - Score ranges: 0-49 (LOW), 50-79 (MEDIUM), 80-100 (HIGH)
   - If range exists: expected_midpoint = (estimated_price_min + estimated_price_max) / 2
@@ -262,14 +266,14 @@ SCORING RULES (STRICT):
   * 0-49 = LOW quality (cold leads, low engagement, vague intent)
   * 50-79 = MEDIUM quality (warm leads, moderate engagement, some buying signals)
   * 80-100 = HIGH quality (hot leads, strong engagement, clear buying intent)
-- Pipeline fields must ONLY be populated if pricing information is present
+- Pipeline fields must ONLY be populated if you can reasonably estimate price from the thread (explicit OR market-based)
 - CRITICAL: Score and pipeline_value MUST be consistent:
   * If score is 0-49 (LOW), pipeline_value should be LOW (proportionally reduced)
   * If score is 50-79 (MEDIUM), pipeline_value should be MEDIUM (moderate expected value)
   * If score is 80-100 (HIGH), pipeline_value can be HIGH (full expected value)
 - Do NOT return high pipeline_value (>$100k) with low scores (<50) - this is inconsistent
-- Do NOT infer pricing if information is vague
-- Do NOT hallucinate market values
+- Do NOT infer pricing if information is too vague (missing location/area OR property context)
+- If you provide a market-based estimate, keep confidence at "low" unless the thread is very specific
 
 CONFIDENCE RULES (STRICT):
 - confidence reflects how certain you are based ONLY on evidence in the thread (NOT gut feel).
@@ -292,10 +296,11 @@ REQUIRED ANALYSIS:
    - 50-79 = MEDIUM quality (warm leads, moderate engagement, some buying signals)
    - 80-100 = HIGH quality (hot leads, strong engagement, clear buying intent)
 2. Classify as "cold" (0-49), "warm" (50-79), or "hot" (80-100) based on score
-3. Evaluate pricing information:
-   - Check if message contains explicit price ranges (e.g., "$350,000 to $450,000", "budget 400k")
-   - estimated_price_min and estimated_price_max = integers if pricing present, null otherwise
-   - pipeline_value = calculated value if pricing present, null otherwise
+3. Estimate price + pipeline value:
+   - If message contains explicit price ranges (e.g., "$350,000 to $450,000", "budget 400k"), use those.
+   - If NO explicit dollars but sufficient property context exists (location/area + property type + beds/baths/features/timeline), provide a market-based estimate range.
+   - estimated_price_min and estimated_price_max = integers if you can estimate, null otherwise (if single point estimate, set min=max)
+   - pipeline_value = calculated expected value if you can estimate, null otherwise
    - CRITICAL: pipeline_value MUST align with score (low score = low pipeline_value, high score = high pipeline_value)
 4. Provide confidence, reasoning, and recommended_actions
 
