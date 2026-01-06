@@ -13,7 +13,7 @@ export async function getAgentProfile(supabase, userId) {
 
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('full_name, communication_style, primary_goal, lead_volume, plan, email')
+    .select('full_name, communication_style, primary_goal, lead_volume, plan, email, commission_rate, auto_analyze_leads')
     .eq('id', userId)
     .maybeSingle();
 

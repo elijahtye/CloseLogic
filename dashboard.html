@@ -248,10 +248,13 @@
                             </div>
 
                             <!-- Pipeline Value (Conditional) -->
-                            <div class="intelligence-section">
+                            <div class="intelligence-section" id="pipelineValueSection">
                                 <div class="section-header">
-                                    <h3>Expected Value</h3>
+                                    <h3>Estimated Pipeline Value</h3>
                                     <span class="pipeline-value" id="leadPipelineValue">—</span>
+                                </div>
+                                <div class="pipeline-price-range" id="leadEarningsRow" style="display: none; margin-top: 8px;">
+                                    Estimated earnings: <span id="leadEstimatedEarnings">—</span> <span id="leadCommissionHint" style="color:#8a8a8a;"></span>
                                 </div>
                                 <div class="pipeline-price-range" id="leadPriceRange" style="display: none;">
                                     Estimated Range: <span id="priceRangeText"></span>
@@ -419,6 +422,20 @@
                     <label for="profileEmailInput">Email</label>
                     <input id="profileEmailInput" type="email" placeholder="you@example.com" />
                     <div class="modal-help">Updating email may require confirmation via email.</div>
+                </div>
+                <div class="modal-field" id="commissionSettingsField">
+                    <label for="commissionRateInput">Commission %</label>
+                    <input id="commissionRateInput" type="number" min="0" max="20" step="0.1" placeholder="3.0" />
+                    <div class="modal-help">Used for “Estimated earnings” = pipeline value × commission. Agent+ only.</div>
+                </div>
+                <div class="modal-field" id="autoAnalyzeSettingsField">
+                    <label style="display:flex; align-items:center; gap:10px;">
+                        <span>Auto-analyze new lead emails</span>
+                        <button class="toggle-switch" id="autoAnalyzeToggle" type="button" aria-pressed="false" aria-label="Toggle auto analyze">
+                            <span class="toggle-thumb"></span>
+                        </button>
+                    </label>
+                    <div class="modal-help">When enabled, CloseLogic will automatically run AI analysis after inbox sync. Agent+ only.</div>
                 </div>
                 <div class="modal-field">
                     <label>Tiers / Current Tier</label>

@@ -31,6 +31,8 @@
     { key: 'ai_lead_scoring', label: 'AI lead scoring (1–100)', minPlan: 'viewer' },
     { key: 'deal_probability', label: 'Deal probability + lead classification', minPlan: 'viewer' },
     { key: 'pipeline_value', label: 'Pipeline value estimation', minPlan: 'agent' },
+    { key: 'estimated_earnings', label: 'Estimated earnings (commission-based)', minPlan: 'agent' },
+    { key: 'auto_analyze_leads', label: 'Auto-analyze new lead emails', minPlan: 'agent' },
     { key: 'ai_reply_drafts', label: 'AI-generated reply drafts', minPlan: 'agent' },
     { key: 'send_email', label: 'Send emails from CloseLogic', minPlan: 'agent' },
     { key: 'action_items', label: 'Action Items automation', minPlan: 'agent' },

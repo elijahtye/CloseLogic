@@ -128,6 +128,8 @@ let lastAiReplyDraft = null;
 
 // Tier gating (viewer/agent/broker)
 let currentUserPlan = 'viewer';
+let currentCommissionRate = 0.03; // decimal (e.g., 0.03 = 3%)
+let autoAnalyzeEnabled = false;
 
 function getPlanFeatures() {
     return window.PLAN_FEATURES || null;
@@ -185,11 +187,21 @@ async function loadCurrentUserPlan() {
         if (!user) return 'viewer';
         const { data: profile } = await supabaseClient
             .from('profiles')
-            .select('plan')
+            .select('plan, commission_rate, auto_analyze_leads')
             .eq('id', user.id)
             .maybeSingle();
         currentUserPlan = normalizePlan(profile?.plan || 'viewer');
         window.currentUserPlan = currentUserPlan;
+
+        // Also load preferences needed for rendering (commission + auto analyze)
+        const rate = profile?.commission_rate;
+        currentCommissionRate = (rate === null || rate === undefined || rate === '')
+            ? 0.03
+            : (Number(rate) > 1 ? Number(rate) / 100 : Number(rate));
+        if (!Number.isFinite(currentCommissionRate) || currentCommissionRate < 0) currentCommissionRate = 0.03;
+        currentCommissionRate = Math.max(0, Math.min(0.20, currentCommissionRate));
+        autoAnalyzeEnabled = !!profile?.auto_analyze_leads;
+
         return currentUserPlan;
     } catch (e) {
         console.warn('[dashboard] Failed to load plan (non-fatal):', e?.message || e);
@@ -219,6 +231,11 @@ function applyTierGating() {
     // Background sync toggle (Viewer is manual-only)
     setLocked($('autoSyncToggle'), !hasFeature('gmail_sync_background'), 'gmail_sync_background');
 
+    // Pipeline + earnings (Agent+)
+    setLocked($('pipelineValueSection'), !hasFeature('pipeline_value'), 'pipeline_value');
+    setLocked($('commissionSettingsField'), !hasFeature('estimated_earnings'), 'estimated_earnings');
+    setLocked($('autoAnalyzeSettingsField'), !hasFeature('auto_analyze_leads'), 'auto_analyze_leads');
+
     // If a user previously enabled toggles on a higher tier, force-disable when locked
     if (!hasFeature('gmail_sync_background')) {
         try {
@@ -233,6 +250,13 @@ function applyTierGating() {
             setAutoReplyToggleUI(false);
         } catch {}
     }
+}
+
+function setTogglePressed(id, enabled) {
+    const toggle = document.getElementById(id);
+    if (!toggle) return;
+    toggle.classList.toggle('is-on', !!enabled);
+    toggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
 }
 
 // Check authentication and onboarding on page load
@@ -665,10 +689,10 @@ async function loadDashboardData() {
         }
         
         // Fetch leads for this user (ORDER BY last_message_at DESC NULLS LAST)
-        // CRITICAL: Include pipeline_value, estimated_price_min, estimated_price_max
+        // CRITICAL: Include pipeline_value, estimated_price_min, estimated_price_max, estimated_earnings
         const { data: leads, error: leadsError } = await supabaseClient
             .from('leads')
-            .select('*, pipeline_value, estimated_price_min, estimated_price_max')
+            .select('*, pipeline_value, estimated_price_min, estimated_price_max, estimated_earnings')
             .eq('user_id', userId)
             .order('last_message_at', { ascending: false, nullsLast: true });
         
@@ -772,6 +796,7 @@ async function loadDashboardData() {
                 const normalizedPipelineValue = toNumberOrNull(lead.pipeline_value);
                 const normalizedPriceMin = toNumberOrNull(lead.estimated_price_min);
                 const normalizedPriceMax = toNumberOrNull(lead.estimated_price_max);
+                const normalizedEarnings = toNumberOrNull(lead.estimated_earnings);
                 
                 // Check pricing intent if ANY of the three fields exist
                 const hasPricingIntentFlag = hasPricingIntent(
@@ -813,12 +838,14 @@ async function loadDashboardData() {
                     lastMessage: lastMessage ? lastMessage.body : 'No messages yet',
                     lastActivity: lastActivity,
                     lastMessageAt: lastMessageAt,
+                    lastAnalyzedAt: lead.last_analyzed_at ? new Date(lead.last_analyzed_at) : null,
                     // Follow-ups are score-based only (OpenAI), threshold configurable in Automations
                     needsFollowup: (score !== null && score !== undefined && Number(score) >= getFollowupScoreThreshold()),
                     source: lead.source || 'Unknown',
                     pipelineValue: normalizedPipelineValue, // OpenAI-backed expected value only (no UI fallbacks)
                     estimatedPriceMin: normalizedPriceMin, // Normalized number or null
                     estimatedPriceMax: normalizedPriceMax, // Normalized number or null
+                    estimatedEarnings: normalizedEarnings, // Server-computed expected earnings (pipeline × commission)
                     hasPricingIntent: hasPricingIntentFlag, // True if ANY field exists
                     messages: transformedMessages,
                     // Populate from latest score if available
@@ -1165,8 +1192,15 @@ async function setupEventListeners() {
             await disconnectGmail();
         });
         $('manageSubscriptionBtn')?.addEventListener('click', async () => {
-            // Go to dedicated tiers page
-            window.location.href = '/tiers?returnTo=/dashboard';
+            // Go to pricing page
+            window.location.href = '/pricing';
+        });
+
+        // Auto-analyze toggle (Agent+). Actual persistence happens on "Save".
+        $('autoAnalyzeToggle')?.addEventListener('click', (e) => {
+            e?.preventDefault?.();
+            const enabled = $('autoAnalyzeToggle')?.getAttribute('aria-pressed') === 'true';
+            setTogglePressed('autoAnalyzeToggle', !enabled);
         });
 
         // (tiers modal removed; tiers managed via tiers.html)
@@ -2180,10 +2214,10 @@ async function openProfileModal() {
             return;
         }
 
-        // Load profile data (name, email, plan)
+        // Load profile data (name, email, plan, commission, auto-analyze)
         const { data: profile, error: profileError } = await supabaseClient
             .from('profiles')
-            .select('full_name, email, plan')
+            .select('full_name, email, plan, commission_rate, auto_analyze_leads')
             .eq('id', user.id)
             .maybeSingle();
         if (profileError) {
@@ -2207,6 +2241,21 @@ async function openProfileModal() {
 
         // Load Gmail connection status
         await loadGmailStatusInProfile();
+
+        // Prefill commission rate (%)
+        const commissionInput = $('commissionRateInput');
+        const rate = profile?.commission_rate;
+        currentCommissionRate = (rate === null || rate === undefined || rate === '')
+            ? 0.03
+            : (Number(rate) > 1 ? Number(rate) / 100 : Number(rate));
+        if (!Number.isFinite(currentCommissionRate) || currentCommissionRate < 0) currentCommissionRate = 0.03;
+        if (commissionInput) {
+            commissionInput.value = String(Math.round(currentCommissionRate * 1000) / 10); // one decimal %
+        }
+
+        // Prefill auto-analyze toggle
+        autoAnalyzeEnabled = !!profile?.auto_analyze_leads;
+        setTogglePressed('autoAnalyzeToggle', autoAnalyzeEnabled);
 
         openOverlay('profileModalOverlay');
     } catch (e) {
@@ -2329,17 +2378,32 @@ async function saveProfileChanges() {
 
         const newName = String($('profileNameInput')?.value || '').trim();
         const newEmail = String($('profileEmailInput')?.value || '').trim();
+        const commissionPctRaw = String($('commissionRateInput')?.value || '').trim();
+        const commissionPct = commissionPctRaw ? Number(commissionPctRaw) : NaN;
+        const commissionRateDecimal = Number.isFinite(commissionPct)
+            ? Math.max(0, Math.min(0.20, commissionPct / 100))
+            : currentCommissionRate;
+        const autoAnalyzeNext = $('autoAnalyzeToggle')?.getAttribute('aria-pressed') === 'true';
 
-        // 1) Update name in profiles
+        // 1) Update name + settings in profiles
         const { error: nameError } = await supabaseClient
             .from('profiles')
-            .update({ full_name: newName || null, updated_at: new Date().toISOString() })
+            .update({
+                full_name: newName || null,
+                commission_rate: commissionRateDecimal,
+                auto_analyze_leads: !!autoAnalyzeNext,
+                updated_at: new Date().toISOString()
+            })
             .eq('id', user.id);
         if (nameError) {
             console.error('[dashboard] Profile name update failed:', nameError.message);
             showToast(`Failed to update name: ${nameError.message}`, 'error');
             return;
         }
+
+        // Update in-memory settings used for rendering
+        currentCommissionRate = commissionRateDecimal;
+        autoAnalyzeEnabled = !!autoAnalyzeNext;
 
         // 2) Update email (Supabase auth) only if changed
         if (newEmail && newEmail !== user.email) {
@@ -3267,6 +3331,7 @@ async function loadLeadDetailWithAnalysis(leadId) {
                     currentLeads[leadIndex].pipelineValue = toNumberOrNull(analysisResult.pipeline_value);
                     currentLeads[leadIndex].estimatedPriceMin = toNumberOrNull(analysisResult.estimated_price_min);
                     currentLeads[leadIndex].estimatedPriceMax = toNumberOrNull(analysisResult.estimated_price_max);
+                    currentLeads[leadIndex].estimatedEarnings = toNumberOrNull(analysisResult.estimated_earnings);
                     currentLeads[leadIndex].classification = analysisResult.classification || null;
                     currentLeads[leadIndex].score = analysisResult.score ?? null;
                     currentLeads[leadIndex].confidence = analysisResult.confidence || null;
@@ -3275,7 +3340,8 @@ async function loadLeadDetailWithAnalysis(leadId) {
                         lead_id: leadId,
                         pipeline_value: analysisResult.pipeline_value,
                         estimated_price_min: analysisResult.estimated_price_min,
-                        estimated_price_max: analysisResult.estimated_price_max
+                        estimated_price_max: analysisResult.estimated_price_max,
+                        estimated_earnings: analysisResult.estimated_earnings
                     });
 
                     // Refresh KPIs to update top pipeline card
@@ -3318,7 +3384,7 @@ async function loadLeadDetailWithAnalysis(leadId) {
             // Also fetch updated pipeline values from leads table to ensure we have latest
             const { data: updatedLead, error: leadError } = await supabaseClient
                 .from('leads')
-                .select('pipeline_value, estimated_price_min, estimated_price_max, classification')
+                .select('pipeline_value, estimated_price_min, estimated_price_max, estimated_earnings, classification')
                 .eq('id', leadId)
                 .single();
             
@@ -3327,6 +3393,7 @@ async function loadLeadDetailWithAnalysis(leadId) {
                 lead.pipelineValue = toNumberOrNull(updatedLead.pipeline_value);
                 lead.estimatedPriceMin = toNumberOrNull(updatedLead.estimated_price_min);
                 lead.estimatedPriceMax = toNumberOrNull(updatedLead.estimated_price_max);
+                lead.estimatedEarnings = toNumberOrNull(updatedLead.estimated_earnings);
                 
                 // Also update in currentLeads array
                 const leadIndex = currentLeads.findIndex(l => String(l.id) === String(leadId));
@@ -3334,6 +3401,7 @@ async function loadLeadDetailWithAnalysis(leadId) {
                     currentLeads[leadIndex].pipelineValue = lead.pipelineValue;
                     currentLeads[leadIndex].estimatedPriceMin = lead.estimatedPriceMin;
                     currentLeads[leadIndex].estimatedPriceMax = lead.estimatedPriceMax;
+                    currentLeads[leadIndex].estimatedEarnings = lead.estimatedEarnings;
                     currentLeads[leadIndex].classification = updatedLead.classification || lead.classification;
                     
                     // Refresh KPIs to update top pipeline card
@@ -3424,14 +3492,18 @@ function renderLeadDetail(lead, latestScore = null) {
         document.getElementById('probabilityFill').style.width = '0%';
     }
     
-    // Expected Value - CONDITIONAL (OpenAI-backed pipeline_value only; no UI fallbacks)
+    // Pipeline Value + Earnings (Agent+)
     const pipelineValueEl = document.getElementById('leadPipelineValue');
     const priceRangeEl = document.getElementById('leadPriceRange');
     const priceRangeTextEl = document.getElementById('priceRangeText');
+    const earningsRowEl = document.getElementById('leadEarningsRow');
+    const earningsEl = document.getElementById('leadEstimatedEarnings');
+    const commissionHintEl = document.getElementById('leadCommissionHint');
     if (pipelineValueEl) {
         const expectedValue = toNumberOrNull(lead.pipelineValue);
         const priceMin = toNumberOrNull(lead.estimatedPriceMin);
         const priceMax = toNumberOrNull(lead.estimatedPriceMax);
+        const earnings = toNumberOrNull(lead.estimatedEarnings);
         const hasPipelineValue = expectedValue !== null && Number.isFinite(expectedValue);
         
         // Defensive log
@@ -3448,6 +3520,18 @@ function renderLeadDetail(lead, latestScore = null) {
             const valueText = formatUSD(expectedValue);
             pipelineValueEl.textContent = valueText;
             pipelineValueEl.className = 'pipeline-value';
+
+            // Estimated earnings (pipeline × commission). Prefer server value; fallback to client calc if missing.
+            const commissionPct = Math.round((Number(currentCommissionRate || 0.03) * 100) * 10) / 10;
+            const earningsValue = (earnings !== null && Number.isFinite(earnings))
+                ? earnings
+                : Math.round((expectedValue * Number(currentCommissionRate || 0.03)) / 1000) * 1000;
+            if (earningsRowEl && earningsEl) {
+                earningsEl.textContent = formatUSD(earningsValue);
+                if (commissionHintEl) commissionHintEl.textContent = `(at ${commissionPct}% commission)`;
+                earningsRowEl.style.display = '';
+            }
+
             if (priceRangeEl && priceRangeTextEl && priceMin !== null && priceMax !== null && Number.isFinite(priceMin) && Number.isFinite(priceMax)) {
                 const mid = Math.round((priceMin + priceMax) / 2);
                 // Display breakdown for transparency (still no numeric fallbacks; EV comes from OpenAI)
@@ -3460,6 +3544,7 @@ function renderLeadDetail(lead, latestScore = null) {
             // Show "—" if no valid pipeline value
             pipelineValueEl.textContent = '—';
             pipelineValueEl.className = 'pipeline-value no-value';
+            if (earningsRowEl) earningsRowEl.style.display = 'none';
             if (priceRangeEl) {
                 priceRangeEl.style.display = 'none';
             }
@@ -3982,6 +4067,13 @@ async function syncInbox() {
         try {
             await maybeAutoReplyTick({ manual: false });
         } catch {}
+
+        // Auto Analyze: after new emails/leads come in, analyze eligible leads (Agent+ toggle)
+        try {
+            await maybeAutoAnalyzeAfterSync();
+        } catch (e) {
+            console.warn('[auto-analyze] failed (non-fatal):', e?.message || e);
+        }
         
     } catch (error) {
         console.error('[dashboard] Error syncing inbox:', {
@@ -3994,6 +4086,64 @@ async function syncInbox() {
         if (btn) btn.disabled = false;
         await checkGmailConnectionStatus();
     }
+}
+
+async function maybeAutoAnalyzeAfterSync() {
+    if (!autoAnalyzeEnabled) return;
+    if (!hasFeature('auto_analyze_leads')) return;
+    if (!supabaseClient) return;
+
+    // Analyze a small batch to avoid heavy OpenAI usage
+    const MAX = 10;
+    const eligible = (Array.isArray(currentLeads) ? currentLeads : [])
+        .filter((l) => {
+            const hasInbound = Array.isArray(l?.messages) && l.messages.some((m) => m?.from === 'lead');
+            if (!hasInbound) return false;
+            // If never analyzed or new message arrived since last analysis, analyze.
+            const la = l?.lastAnalyzedAt instanceof Date ? l.lastAnalyzedAt : null;
+            const lm = l?.lastMessageAt instanceof Date ? l.lastMessageAt : null;
+            if (!la) return true;
+            if (lm && la.getTime() < lm.getTime()) return true;
+            // Also re-run if pipeline fields are missing (backfill)
+            const pv = toNumberOrNull(l?.pipelineValue);
+            const emin = toNumberOrNull(l?.estimatedPriceMin);
+            const emax = toNumberOrNull(l?.estimatedPriceMax);
+            return pv === null && emin === null && emax === null;
+        })
+        .slice(0, MAX);
+
+    if (eligible.length === 0) return;
+
+    console.log('[auto-analyze] running', { count: eligible.length });
+    for (const lead of eligible) {
+        try {
+            const r = await requestLeadAnalysis(String(lead.id));
+            const idx = currentLeads.findIndex((x) => String(x.id) === String(lead.id));
+            if (idx !== -1 && (r.success === true || r.ok === true)) {
+                currentLeads[idx].pipelineValue = toNumberOrNull(r.pipeline_value);
+                currentLeads[idx].estimatedPriceMin = toNumberOrNull(r.estimated_price_min);
+                currentLeads[idx].estimatedPriceMax = toNumberOrNull(r.estimated_price_max);
+                currentLeads[idx].estimatedEarnings = toNumberOrNull(r.estimated_earnings);
+                currentLeads[idx].score = r.score ?? currentLeads[idx].score ?? null;
+                currentLeads[idx].confidence = r.confidence || currentLeads[idx].confidence || null;
+                currentLeads[idx].classification = r.classification || currentLeads[idx].classification || null;
+                currentLeads[idx].lastAnalyzedAt = new Date();
+            }
+        } catch (e) {
+            // requestLeadAnalysis already toasts errors when relevant
+            console.warn('[auto-analyze] lead failed', { lead_id: lead?.id, error: e?.message || e });
+        }
+    }
+
+    // Refresh UI
+    try { renderKPIs(); } catch {}
+    try { filterAndRenderLeads(); } catch {}
+    try {
+        if (selectedLeadId) {
+            const selected = currentLeads.find((l) => String(l.id) === String(selectedLeadId));
+            if (selected) renderLeadDetail(selected, null);
+        }
+    } catch {}
 }
 
 async function requestLeadAnalysis(leadId) {

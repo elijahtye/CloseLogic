@@ -152,6 +152,16 @@ export async function analyzeLead(leadId, userId, options = {}) {
         // Re-throw to be caught by caller
         throw new Error(`OpenAI analysis failed: ${openaiError.message}`);
     }
+
+    // Compute estimated earnings from pipeline_value × commission (Agent+ feature)
+    // Commission is stored on profile as a decimal (e.g., 0.03 = 3%)
+    const commissionRate = normalizeCommissionRate(profileData?.commission_rate);
+    const pipelineVal = typeof analysis?.pipeline_value === 'number' ? analysis.pipeline_value : null;
+    const estimatedEarnings = (pipelineVal !== null && commissionRate !== null)
+        ? Math.round((pipelineVal * commissionRate) / 1000) * 1000 // nearest $1,000
+        : null;
+    analysis.estimated_earnings = estimatedEarnings;
+    analysis.commission_rate_used = commissionRate;
     
     // TASK B: Save to Supabase with only known columns
     try {
@@ -168,6 +178,17 @@ export async function analyzeLead(leadId, userId, options = {}) {
     }
     
     return analysis;
+}
+
+function normalizeCommissionRate(value) {
+    if (value === null || value === undefined || value === '') return 0.03; // default 3%
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 0.03;
+    // Accept either decimal (0.03) or percent (3). If > 1.0 assume percent.
+    const asDecimal = n > 1 ? n / 100 : n;
+    // Clamp to a sane range: 0% - 20%
+    const clamped = Math.max(0, Math.min(0.20, asDecimal));
+    return clamped;
 }
 
 /**
@@ -769,7 +790,7 @@ async function saveAnalysis(supabase, leadId, userId, analysis) {
     }
     
     // TASK B: Update leads table with ONLY known columns
-    // Known columns: score, classification, confidence, estimated_price_min, estimated_price_max, pipeline_value, last_analyzed_at, needs_followup, updated_at
+    // Known columns: score, classification, confidence, estimated_price_min, estimated_price_max, pipeline_value, estimated_earnings, last_analyzed_at, needs_followup, updated_at
     const leadUpdateData = {
         score: analysis.lead_score,
         confidence: analysis.confidence,
@@ -794,18 +815,23 @@ async function saveAnalysis(supabase, leadId, userId, analysis) {
         leadUpdateData.pipeline_value = typeof analysis.pipeline_value === 'number'
             ? Math.round(analysis.pipeline_value)
             : null;
+        leadUpdateData.estimated_earnings = typeof analysis.estimated_earnings === 'number'
+            ? Math.round(analysis.estimated_earnings)
+            : null;
         
         console.log('[AI_DB_WRITE] Writing pipeline values', {
             lead_id: leadId,
             estimated_price_min: leadUpdateData.estimated_price_min,
             estimated_price_max: leadUpdateData.estimated_price_max,
-            pipeline_value: leadUpdateData.pipeline_value
+            pipeline_value: leadUpdateData.pipeline_value,
+            estimated_earnings: leadUpdateData.estimated_earnings
         });
     } else {
         // Explicitly set to null if no pricing intent
         leadUpdateData.estimated_price_min = null;
         leadUpdateData.estimated_price_max = null;
         leadUpdateData.pipeline_value = null;
+        leadUpdateData.estimated_earnings = null;
         
         console.log('[AI_DB_WRITE] No pricing intent - setting pipeline fields to NULL', {
             lead_id: leadId

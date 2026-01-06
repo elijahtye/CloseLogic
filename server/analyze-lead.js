@@ -260,6 +260,7 @@ export default async function handler(req, res) {
             estimated_price_min: analysis.estimated_price_min,
             estimated_price_max: analysis.estimated_price_max,
             pipeline_value: analysis.pipeline_value,
+            estimated_earnings: analysis.estimated_earnings,
             reason: analysis.reason,
             recommended_actions: analysis.recommended_actions
         });
