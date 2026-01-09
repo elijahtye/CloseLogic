@@ -30,7 +30,7 @@
     { key: 'gmail_sync_background', label: 'Continuous background sync', minPlan: 'agent' },
     { key: 'ai_lead_scoring', label: 'AI lead scoring (1–100)', minPlan: 'viewer' },
     { key: 'deal_probability', label: 'Deal probability + lead classification', minPlan: 'viewer' },
-    { key: 'pipeline_value', label: 'Pipeline value estimation', minPlan: 'agent' },
+    { key: 'pipeline_value', label: 'Pipeline value estimation', minPlan: 'viewer' },
     { key: 'estimated_earnings', label: 'Estimated earnings (commission-based)', minPlan: 'agent' },
     { key: 'auto_analyze_leads', label: 'Auto-analyze new lead emails', minPlan: 'agent' },
     { key: 'ai_reply_drafts', label: 'AI-generated reply drafts', minPlan: 'agent' },

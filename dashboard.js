@@ -231,8 +231,8 @@ function applyTierGating() {
     // Background sync toggle (Viewer is manual-only)
     setLocked($('autoSyncToggle'), !hasFeature('gmail_sync_background'), 'gmail_sync_background');
 
-    // Pipeline + earnings (Agent+)
-    setLocked($('pipelineValueSection'), !hasFeature('pipeline_value'), 'pipeline_value');
+    // Earnings + auto-analyze (Agent+)
+    // Pipeline value is available to all tiers (no lock)
     setLocked($('commissionSettingsField'), !hasFeature('estimated_earnings'), 'estimated_earnings');
     setLocked($('autoAnalyzeSettingsField'), !hasFeature('auto_analyze_leads'), 'auto_analyze_leads');
 
@@ -1194,6 +1194,15 @@ async function setupEventListeners() {
         $('manageSubscriptionBtn')?.addEventListener('click', async () => {
             // Go to pricing page
             window.location.href = '/pricing';
+        });
+
+        // Commission help icon (show upgrade message for non-Agent+ users)
+        $('commissionHelpBtn')?.addEventListener('click', (e) => {
+            e?.preventDefault?.();
+            e?.stopPropagation?.();
+            if (!hasFeature('estimated_earnings')) {
+                showToast('Unlock custom commission by upgrading to Agent!', 'info');
+            }
         });
 
         // Auto-analyze toggle (Agent+). Actual persistence happens on "Save".
@@ -2244,13 +2253,21 @@ async function openProfileModal() {
 
         // Prefill commission rate (%)
         const commissionInput = $('commissionRateInput');
-        const rate = profile?.commission_rate;
+        const canEditCommission = hasFeature('estimated_earnings');
+        // For non-Agent+ users, always use 3% default (don't read from profile)
+        const rate = canEditCommission ? (profile?.commission_rate) : null;
         currentCommissionRate = (rate === null || rate === undefined || rate === '')
             ? 0.03
             : (Number(rate) > 1 ? Number(rate) / 100 : Number(rate));
         if (!Number.isFinite(currentCommissionRate) || currentCommissionRate < 0) currentCommissionRate = 0.03;
         if (commissionInput) {
             commissionInput.value = String(Math.round(currentCommissionRate * 1000) / 10); // one decimal %
+            commissionInput.disabled = !canEditCommission;
+            if (!canEditCommission) {
+                commissionInput.style.opacity = '0.6';
+                commissionInput.style.cursor = 'not-allowed';
+                commissionInput.value = '3.0'; // Always show 3.0 for non-Agent+ users
+            }
         }
 
         // Prefill auto-analyze toggle
@@ -2378,20 +2395,31 @@ async function saveProfileChanges() {
 
         const newName = String($('profileNameInput')?.value || '').trim();
         const newEmail = String($('profileEmailInput')?.value || '').trim();
+        const canEditCommission = hasFeature('estimated_earnings');
         const commissionPctRaw = String($('commissionRateInput')?.value || '').trim();
         const commissionPct = commissionPctRaw ? Number(commissionPctRaw) : NaN;
-        const commissionRateDecimal = Number.isFinite(commissionPct)
+        const commissionRateDecimal = canEditCommission && Number.isFinite(commissionPct)
             ? Math.max(0, Math.min(0.20, commissionPct / 100))
-            : currentCommissionRate;
-        const autoAnalyzeNext = $('autoAnalyzeToggle')?.getAttribute('aria-pressed') === 'true';
+            : (canEditCommission ? currentCommissionRate : 0.03); // Default 3% for non-Agent+
+        const autoAnalyzeNext = hasFeature('auto_analyze_leads') && $('autoAnalyzeToggle')?.getAttribute('aria-pressed') === 'true';
 
         // 1) Update name + settings in profiles
+        const updateData = {
+            full_name: newName || null,
+            updated_at: new Date().toISOString()
+        };
+        
+        // Only update commission_rate and auto_analyze_leads if user has the feature
+        if (canEditCommission) {
+            updateData.commission_rate = commissionRateDecimal;
+        }
+        if (hasFeature('auto_analyze_leads')) {
+            updateData.auto_analyze_leads = !!autoAnalyzeNext;
+        }
+        
         const { error: nameError } = await supabaseClient
             .from('profiles')
-            .update({
-                full_name: newName || null,
-                commission_rate: commissionRateDecimal,
-                auto_analyze_leads: !!autoAnalyzeNext,
+            .update(updateData)
                 updated_at: new Date().toISOString()
             })
             .eq('id', user.id);
