@@ -2420,8 +2420,6 @@ async function saveProfileChanges() {
         const { error: nameError } = await supabaseClient
             .from('profiles')
             .update(updateData)
-                updated_at: new Date().toISOString()
-            })
             .eq('id', user.id);
         if (nameError) {
             console.error('[dashboard] Profile name update failed:', nameError.message);
