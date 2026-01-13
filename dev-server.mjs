@@ -53,10 +53,7 @@ if (fs.existsSync(envPath)) {
 
 // Now import handlers (they can safely use process.env)
 import http from 'http';
-import analyzeLeadHandler from './api/analyze-lead.js';
-import messagesHandler from './api/messages.js';
-import connectGmailHandler from './api/connect-gmail.js';
-import syncInboxHandler from './api/sync-inbox.js';
+import apiRouter from './api/index.js';
 
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;
@@ -198,105 +195,8 @@ async function handleApi(nodeReq, nodeRes) {
   // For GET requests (like gmail-callback), don't read body
   const bodyObj = nodeReq.method === 'GET' ? null : await readJsonBody(nodeReq);
   const { req, res } = makeVercelLikeReqRes(nodeReq, nodeRes, bodyObj);
-
-  // Health check endpoint (no auth required)
-  if (pathname === '/api/health') {
-    const healthHandler = (await import('./api/health.js')).default;
-    return await healthHandler(req, res);
-  }
-
-  if (pathname === '/api/analyze-lead') {
-    return await analyzeLeadHandler(req, res);
-  }
-  if (pathname === '/api/messages') {
-    return await messagesHandler(req, res);
-  }
-  if (pathname === '/api/ai/reply') {
-    console.log('[dev-server] Routing to /api/ai/reply');
-    try {
-      const aiReplyHandler = (await import('./api/ai/reply.js')).default;
-      return await aiReplyHandler(req, res);
-    } catch (importError) {
-      console.error('[dev-server] Failed to import ai/reply:', importError);
-      return sendJson(nodeRes, 500, { ok: false, error: 'Failed to load handler: ' + importError.message });
-    }
-  }
-          // Gmail OAuth routes (standardized structure)
-          if (pathname === '/api/gmail/connect') {
-            console.log('[dev-server] Routing to /api/gmail/connect');
-            try {
-              const gmailConnectHandler = (await import('./api/gmail/connect.js')).default;
-              return await gmailConnectHandler(req, res);
-            } catch (importError) {
-              console.error('[dev-server] Failed to import gmail/connect:', importError);
-              return sendJson(nodeRes, 500, { success: false, error: 'Failed to load handler: ' + importError.message });
-            }
-          }
-  if (pathname === '/api/gmail/callback') {
-    console.log('[dev-server] Routing to /api/gmail/callback');
-    try {
-      const gmailCallbackHandler = (await import('./api/gmail/callback.js')).default;
-      return await gmailCallbackHandler(req, res);
-    } catch (importError) {
-      console.error('[dev-server] Failed to import gmail/callback:', importError);
-      return sendJson(nodeRes, 500, { ok: false, error: 'Failed to load handler: ' + importError.message });
-    }
-  }
-  if (pathname === '/api/gmail/status') {
-    console.log('[dev-server] Routing to /api/gmail/status');
-    try {
-      const gmailStatusHandler = (await import('./api/gmail/status.js')).default;
-      return await gmailStatusHandler(req, res);
-    } catch (importError) {
-      console.error('[dev-server] Failed to import gmail/status:', importError);
-      return sendJson(nodeRes, 500, { ok: false, error: 'Failed to load handler: ' + importError.message });
-    }
-  }
-  if (pathname === '/api/gmail/sync') {
-    console.log('[dev-server] Routing to /api/gmail/sync');
-    try {
-      const gmailSyncHandler = (await import('./api/gmail/sync.js')).default;
-      return await gmailSyncHandler(req, res);
-    } catch (importError) {
-      console.error('[dev-server] Failed to import gmail/sync:', importError);
-      return sendJson(nodeRes, 500, { ok: false, error: 'Failed to load handler: ' + importError.message });
-    }
-  }
-  if (pathname === '/api/gmail/disconnect') {
-    console.log('[dev-server] Routing to /api/gmail/disconnect');
-    try {
-      const gmailDisconnectHandler = (await import('./api/gmail/disconnect.js')).default;
-      return await gmailDisconnectHandler(req, res);
-    } catch (importError) {
-      console.error('[dev-server] Failed to import gmail/disconnect:', importError);
-      return sendJson(nodeRes, 500, { ok: false, error: 'Failed to load handler: ' + importError.message });
-    }
-  }
-  if (pathname === '/api/gmail/send') {
-    console.log('[dev-server] Routing to /api/gmail/send');
-    try {
-      const gmailSendHandler = (await import('./api/gmail/send.js')).default;
-      return await gmailSendHandler(req, res);
-    } catch (importError) {
-      console.error('[dev-server] Failed to import gmail/send:', importError);
-      return sendJson(nodeRes, 500, { ok: false, error: 'Failed to load handler: ' + importError.message });
-    }
-  }
-  
-  // Legacy routes (for backward compatibility)
-  if (pathname === '/api/connect-gmail') {
-    return await connectGmailHandler(req, res);
-  }
-  if (pathname === '/api/gmail-callback') {
-    const gmailCallbackHandler = (await import('./api/gmail-callback.js')).default;
-    return await gmailCallbackHandler(req, res);
-  }
-  if (pathname === '/api/sync-inbox') {
-    return await syncInboxHandler(req, res);
-  }
-
-  console.log('[dev-server] No route matched for:', pathname);
-  return sendJson(nodeRes, 404, { ok: false, error: 'Not found' });
+  // Delegate all /api/* routes to the consolidated router (matches Vercel production behavior)
+  return await apiRouter(req, res);
 }
 
 function serveStatic(nodeReq, nodeRes) {
@@ -354,7 +254,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(port, () => {
   console.log(`[dev-server] Running on http://localhost:${port}`);
-  console.log('[dev-server] Serving static files + local /api/analyze-lead and /api/messages');
+  console.log('[dev-server] Serving static files + local /api/* routed through api/index.js');
   // Safe env diagnostics (does not log secrets)
   const clientId = process.env.GOOGLE_CLIENT_ID;
   if (clientId) {

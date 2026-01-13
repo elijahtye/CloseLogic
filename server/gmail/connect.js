@@ -152,15 +152,12 @@ export default async function handler(req, res) {
         });
         
         // Build Google OAuth URL
-        // NOTE: We request send + modify so the app can draft + send replies and manage labels/read state.
-        // Reconnecting will prompt consent and update the granted scopes.
+        // NOTE: CloseLogic is read-only/analytical. We request the minimum Gmail scope required for inbox sync.
         const scope = [
             'openid',
             'email',
             'profile',
-            'https://www.googleapis.com/auth/gmail.readonly',
-            'https://www.googleapis.com/auth/gmail.send',
-            'https://www.googleapis.com/auth/gmail.modify'
+            'https://www.googleapis.com/auth/gmail.readonly'
         ].join(' ');
         const params = new URLSearchParams({
             response_type: 'code',

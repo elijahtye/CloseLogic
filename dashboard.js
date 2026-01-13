@@ -214,19 +214,12 @@ function applyTierGating() {
     // Automations tabs
     const actionTab = document.querySelector('.automation-tab[data-tab="actionItems"]');
     const remindersTab = document.querySelector('.automation-tab[data-tab="replyReminders"]');
-    const autoReplyTab = document.querySelector('.automation-tab[data-tab="autoReply"]');
     setLocked(actionTab, !hasFeature('action_items'), 'action_items');
     setLocked(remindersTab, !hasFeature('reply_reminders'), 'reply_reminders');
-    setLocked(autoReplyTab, !hasFeature('auto_reply'), 'auto_reply');
 
     // Panels/controls
     setLocked($('automationTabActionItems'), !hasFeature('action_items'), 'action_items');
     setLocked($('automationTabReplyReminders'), !hasFeature('reply_reminders'), 'reply_reminders');
-    setLocked($('automationTabAutoReply'), !hasFeature('auto_reply'), 'auto_reply');
-
-    // Reply drafting + sending
-    setLocked($('generateReplyBtn'), !hasFeature('ai_reply_drafts'), 'ai_reply_drafts');
-    setLocked($('sendReplyBtn'), !hasFeature('send_email'), 'send_email');
 
     // Background sync toggle (Viewer is manual-only)
     setLocked($('autoSyncToggle'), !hasFeature('gmail_sync_background'), 'gmail_sync_background');
@@ -242,12 +235,6 @@ function applyTierGating() {
             setAutoSyncEnabled(false);
             setAutoSyncToggleUI(false);
             stopAutoSync();
-        } catch {}
-    }
-    if (!hasFeature('auto_reply')) {
-        try {
-            setAutoReplyEnabled(false);
-            setAutoReplyToggleUI(false);
         } catch {}
     }
 }
@@ -1003,35 +990,6 @@ async function setupEventListeners() {
             });
         }
 
-        // Phase 5: Generate Reply button
-        const generateReplyBtn = document.getElementById('generateReplyBtn');
-        if (generateReplyBtn) {
-            generateReplyBtn.addEventListener('click', async function() {
-                if (!selectedLeadId) {
-                    showToast('Please select a lead first', 'error');
-                    return;
-                }
-                await generateReplyForSelectedLead();
-            });
-        }
-
-        // Reply composer (copy + send)
-        const copyReplyBtn = document.getElementById('copyReplyBtn');
-        if (copyReplyBtn) {
-            copyReplyBtn.addEventListener('click', async function() {
-                const subject = $('replySubjectInput')?.value || '';
-                const body = $('replyBodyInput')?.value || '';
-                const ok = await copyToClipboard(`Subject: ${subject}\n\n${body}`.trim());
-                showToast(ok ? 'Copied' : 'Copy failed', ok ? 'success' : 'error');
-            });
-        }
-        const sendReplyBtn = document.getElementById('sendReplyBtn');
-        if (sendReplyBtn) {
-            sendReplyBtn.addEventListener('click', async function() {
-                await sendOutboundReply();
-            });
-        }
-        
         // Gmail connection/sync button
         const gmailBtn = document.getElementById('gmailConnectionBtn');
         if (gmailBtn) {
@@ -1082,11 +1040,10 @@ async function setupEventListeners() {
             console.warn('[dashboard] Auto Reminder init failed (non-fatal):', e?.message || e);
         }
 
-        // Initialize follow-up threshold + auto reply UI state (automations)
+        // Initialize follow-up threshold (automations)
         try {
             const t = getFollowupScoreThreshold();
             if ($('followupScoreThreshold')) $('followupScoreThreshold').value = String(t);
-            loadAutoReplySettingsIntoUI();
         } catch (e) {
             console.warn('[dashboard] Automations settings init failed (non-fatal):', e?.message || e);
         }
@@ -1144,40 +1101,6 @@ async function setupEventListeners() {
                 conversationThread.classList.toggle('collapsed');
             });
         }
-
-        // AI Reply modal behavior
-        $('aiReplyModalCloseBtn')?.addEventListener('click', () => closeOverlay('aiReplyModalOverlay'));
-        $('closeAiReplyBtn')?.addEventListener('click', () => closeOverlay('aiReplyModalOverlay'));
-        $('aiReplyModalOverlay')?.addEventListener('click', (e) => {
-            if (e?.target?.id === 'aiReplyModalOverlay') closeOverlay('aiReplyModalOverlay');
-        });
-        $('copySubjectBtn')?.addEventListener('click', async () => {
-            const ok = await copyToClipboard($('aiReplySubject')?.value || '');
-            showToast(ok ? 'Subject copied' : 'Copy failed', ok ? 'success' : 'error');
-        });
-        $('copyBodyBtn')?.addEventListener('click', async () => {
-            const ok = await copyToClipboard($('aiReplyBody')?.value || '');
-            showToast(ok ? 'Body copied' : 'Copy failed', ok ? 'success' : 'error');
-        });
-        $('copyBothBtn')?.addEventListener('click', async () => {
-            const subject = $('aiReplySubject')?.value || '';
-            const body = $('aiReplyBody')?.value || '';
-            const ok = await copyToClipboard(`Subject: ${subject}\n\n${body}`.trim());
-            showToast(ok ? 'Copied' : 'Copy failed', ok ? 'success' : 'error');
-        });
-        $('useDraftBtn')?.addEventListener('click', async () => {
-            const subject = $('aiReplySubject')?.value || '';
-            const body = $('aiReplyBody')?.value || '';
-            if ($('replyComposer')) {
-                $('replySubjectInput').value = subject;
-                $('replyBodyInput').value = body;
-                $('replyComposer').style.display = 'block';
-                $('replyComposer').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                // Close the AI reply modal for smooth transition
-                closeOverlay('aiReplyModalOverlay');
-                showToast('Draft added to composer', 'success');
-            }
-        });
 
         // Profile modal behavior
         $('profileModalCloseBtn')?.addEventListener('click', () => closeOverlay('profileModalOverlay'));
@@ -1248,7 +1171,6 @@ async function setupEventListeners() {
                 if (tab === 'actionItems') $('automationTabActionItems')?.classList.add('active');
                 if (tab === 'replyReminders') $('automationTabReplyReminders')?.classList.add('active');
                 if (tab === 'priorityLeads') $('automationTabPriorityLeads')?.classList.add('active');
-                if (tab === 'autoReply') $('automationTabAutoReply')?.classList.add('active');
                 refreshAutomationsLists();
             });
         });
@@ -1287,31 +1209,6 @@ async function setupEventListeners() {
             refreshAutomationsLists();
         });
 
-        // Auto Reply controls
-        $('autoReplyToggle')?.addEventListener('click', async () => {
-            const enabled = !isAutoReplyEnabled();
-            setAutoReplyEnabled(enabled);
-            setAutoReplyToggleUI(enabled);
-            if (enabled) {
-                showToast('Auto Reply enabled', 'success');
-                await maybeAutoReplyTick({ manual: true });
-            } else {
-                showToast('Auto Reply disabled', 'info');
-            }
-            refreshAutomationsLists();
-        });
-        $('autoReplyRunOnceBtn')?.addEventListener('click', async () => {
-            await maybeAutoReplyTick({ manual: true });
-            refreshAutomationsLists();
-        });
-        $('autoReplyMinScore')?.addEventListener('input', () => { saveAutoReplySettingsFromUI(); refreshAutomationsLists(); });
-        $('autoReplyPriceQualified')?.addEventListener('change', () => { saveAutoReplySettingsFromUI(); refreshAutomationsLists(); });
-        $('autoReplyMentionDatesOnly')?.addEventListener('change', () => { saveAutoReplySettingsFromUI(); refreshAutomationsLists(); });
-        $('autoReplyModeAi')?.addEventListener('change', () => { saveAutoReplySettingsFromUI(); refreshAutomationsLists(); });
-        $('autoReplyModeTemplate')?.addEventListener('change', () => { saveAutoReplySettingsFromUI(); refreshAutomationsLists(); });
-        $('autoReplySubjectTemplate')?.addEventListener('input', () => { saveAutoReplySettingsFromUI(); });
-        $('autoReplyBodyTemplate')?.addEventListener('input', () => { saveAutoReplySettingsFromUI(); });
-        
         // Analysis status will be updated automatically when lead is selected
     } catch (error) {
         console.error('[dashboard] Error setting up event listeners:', error);
@@ -2458,171 +2355,7 @@ async function saveProfileChanges() {
     }
 }
 
-async function generateReplyForSelectedLead() {
-    if (!hasFeature('ai_reply_drafts')) {
-        promptUpgrade('ai_reply_drafts');
-        return;
-    }
-    const btn = $('generateReplyBtn');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'Generating...';
-    }
-    try {
-        const url = `${API_CONFIG.baseUrl}/api/ai/reply`;
-        console.log('[dashboard] Calling /api/ai/reply:', { url, lead_id: selectedLeadId });
-
-        const resp = await fetchWithAuth(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lead_id: String(selectedLeadId) })
-        });
-
-        const text = await resp.text();
-        let result = {};
-        try { result = JSON.parse(text); } catch {}
-
-        if (!resp.ok || result.ok !== true) {
-            const msg = result.error || `HTTP ${resp.status}: ${resp.statusText}`;
-            console.error('[dashboard] /api/ai/reply failed:', { status: resp.status, error: msg, body: text?.slice(0, 200) });
-            const userMsg = (msg === 'openai_failed' || resp.status === 502 || resp.status === 503)
-                ? 'AI unavailable—retry'
-                : `Generate Reply failed: ${msg}`;
-            showToast(userMsg, 'error');
-            return;
-        }
-
-        lastAiReplyDraft = result;
-        if ($('aiReplySubject')) $('aiReplySubject').value = result.subject || '';
-        if ($('aiReplyBody')) $('aiReplyBody').value = result.body || '';
-        const notesEl = $('aiReplyNotes');
-        if (notesEl) {
-            const notes = String(result.notes || '').trim();
-            if (notes) {
-                notesEl.style.display = '';
-                notesEl.textContent = `AI notes: ${notes}`;
-            } else {
-                notesEl.style.display = 'none';
-                notesEl.textContent = '';
-            }
-        }
-
-        openOverlay('aiReplyModalOverlay');
-    } catch (e) {
-        console.error('[dashboard] generateReplyForSelectedLead exception:', e);
-        showToast(`Generate Reply failed: ${e.message}`, 'error');
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'Generate Reply';
-        }
-    }
-}
-
-async function sendOutboundReply() {
-    if (!hasFeature('send_email')) {
-        promptUpgrade('send_email');
-        return;
-    }
-    if (!selectedLeadId) {
-        showToast('Please select a lead first', 'error');
-        return;
-    }
-    const subject = $('replySubjectInput')?.value || '';
-    let body = $('replyBodyInput')?.value || '';
-    if (!String(body).trim()) {
-        showToast('Message body is required', 'error');
-        return;
-    }
-
-    // Append user's name as signature if available
-    try {
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if (user) {
-            const { data: profile } = await supabaseClient
-                .from('profiles')
-                .select('full_name')
-                .eq('id', user.id)
-                .maybeSingle();
-            if (profile?.full_name) {
-                const signature = `\n\n${profile.full_name}`;
-                if (!body.endsWith(signature)) {
-                    body = body + signature;
-                }
-            }
-        }
-    } catch (sigError) {
-        console.warn('[dashboard] Failed to load signature (non-fatal):', sigError);
-    }
-
-    const btn = $('sendReplyBtn');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'Sending...';
-    }
-
-    try {
-        // 1) Send email via Gmail (server-side tokens)
-        const sendUrl = `${API_CONFIG.baseUrl}/api/gmail/send`;
-        const sendResp = await fetchWithAuth(sendUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                lead_id: String(selectedLeadId),
-                subject: subject || null,
-                body: body // Includes signature
-            })
-        });
-
-        const sendText = await sendResp.text();
-        let sendResult = {};
-        try { sendResult = JSON.parse(sendText); } catch {}
-
-        if (!sendResp.ok || sendResult.success !== true) {
-            const msg = sendResult.details || sendResult.error || `HTTP ${sendResp.status}: ${sendResp.statusText}`;
-            console.error('[dashboard] /api/gmail/send failed:', { status: sendResp.status, error: msg, body: sendText?.slice(0, 200) });
-            if (sendResult.error === 'missing_scope') {
-                showToast('Gmail needs re-connection for Send/Modify permissions. Click Connect Gmail again.', 'error');
-            } else {
-                showToast(`Send failed: ${msg}`, 'error');
-            }
-            return;
-        }
-
-        // 2) Log outbound message to conversation thread (DB) - use body WITH signature
-        const logUrl = `${API_CONFIG.baseUrl}/api/messages`;
-        const logResp = await fetchWithAuth(logUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                lead_id: String(selectedLeadId),
-                direction: 'outbound',
-                subject: subject || null,
-                body: body, // Includes signature
-                sent_at: new Date().toISOString()
-            })
-        });
-        if (!logResp.ok) {
-            const logText = await logResp.text();
-            console.warn('[dashboard] Sent email but failed to log message:', { status: logResp.status, body: logText?.slice(0, 200) });
-        }
-
-        $('replyBodyInput').value = '';
-        showToast('Email sent', 'success');
-
-        await loadDashboardData();
-        filterAndRenderLeads();
-        await loadLeadDetailWithAnalysis(selectedLeadId);
-    } catch (e) {
-        console.error('[dashboard] sendOutboundReply exception:', e);
-        showToast(`Send failed: ${e.message}`, 'error');
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'Send Email';
-        }
-    }
-}
+// Note: CloseLogic is currently read-only/analytical. Reply drafting/sending has been removed.
 
 // KPI Calculations and Rendering
 function renderKPIs() {
@@ -3284,25 +3017,7 @@ async function selectLead(leadId) {
         conversationThread.classList.remove('collapsed');
     }
 
-    // Show reply composer and prefill subject from latest inbound message
-    try {
-        const lead = currentLeads.find(l => String(l.id) === String(leadId));
-        const composer = $('replyComposer');
-        if (composer) {
-            composer.style.display = 'block';
-        }
-        const latestInbound = Array.isArray(lead?.messages)
-            ? [...lead.messages].reverse().find(m => m.from === 'lead') // newest-first scan (messages are chronological)
-            : null;
-        const subj = latestInbound?.subject ? String(latestInbound.subject) : '';
-        if ($('replySubjectInput')) {
-            $('replySubjectInput').value = subj
-                ? (subj.toLowerCase().startsWith('re:') ? subj : `Re: ${subj}`)
-                : 'Re:';
-        }
-    } catch (e) {
-        console.warn('[dashboard] Failed to prefill reply composer (non-fatal):', e?.message || e);
-    }
+    // Note: reply composing/sending has been removed (read-only/analytical tool).
     
     // Load and display lead details with latest analysis
     await loadLeadDetailWithAnalysis(leadId);

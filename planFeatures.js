@@ -33,11 +33,8 @@
     { key: 'pipeline_value', label: 'Pipeline value estimation', minPlan: 'viewer' },
     { key: 'estimated_earnings', label: 'Estimated earnings (commission-based)', minPlan: 'agent' },
     { key: 'auto_analyze_leads', label: 'Auto-analyze new lead emails', minPlan: 'agent' },
-    { key: 'ai_reply_drafts', label: 'AI-generated reply drafts', minPlan: 'agent' },
-    { key: 'send_email', label: 'Send emails from CloseLogic', minPlan: 'agent' },
     { key: 'action_items', label: 'Action Items automation', minPlan: 'agent' },
     { key: 'reply_reminders', label: 'Reply reminders automation', minPlan: 'agent' },
-    { key: 'auto_reply', label: 'Auto Reply automation', minPlan: 'broker' },
     {
       key: 'gmail_accounts',
       labelByPlan: {
@@ -61,15 +58,15 @@
       key: 'agent',
       name: 'Agent',
       priceLabel: '$39/month',
-      tagline: 'Draft replies + automations',
-      description: 'For agents who want faster responses and smarter follow-up.'
+      tagline: 'Automations + deeper insights',
+      description: 'For agents who want smarter follow-up and deeper lead intelligence.'
     },
     {
       key: 'broker',
       name: 'Broker',
       priceLabel: '$79/month',
-      tagline: 'Advanced automation + multi-inbox',
-      description: 'For teams and power users who need scale and automation.'
+      tagline: 'Multi-inbox + team-scale insights',
+      description: 'For teams and power users who need scale and multi-inbox analytics.'
     }
   ];
 

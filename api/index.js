@@ -11,9 +11,6 @@ import gmailCallbackHandler from '../server/gmail/callback.js';
 import gmailStatusHandler from '../server/gmail/status.js';
 import gmailSyncHandler from '../server/gmail/sync.js';
 import gmailDisconnectHandler from '../server/gmail/disconnect.js';
-import gmailSendHandler from '../server/gmail/send.js';
-
-import aiReplyHandler from '../server/ai/reply.js';
 
 // Legacy endpoints kept for backward compatibility
 import legacyConnectGmailHandler from '../server/connect-gmail.js';
@@ -63,16 +60,12 @@ export default async function handler(req, res) {
     if (p === '/messages') return messagesHandler(req, res);
     if (p === '/sync-inbox') return syncInboxHandler(req, res);
 
-    // AI
-    if (p === '/ai/reply') return aiReplyHandler(req, res);
-
     // Gmail (current)
     if (p === '/gmail/connect') return gmailConnectHandler(req, res);
     if (p === '/gmail/callback') return gmailCallbackHandler(req, res);
     if (p === '/gmail/status') return gmailStatusHandler(req, res);
     if (p === '/gmail/sync') return gmailSyncHandler(req, res);
     if (p === '/gmail/disconnect') return gmailDisconnectHandler(req, res);
-    if (p === '/gmail/send') return gmailSendHandler(req, res);
 
     // Gmail (legacy URLs)
     if (p === '/connect-gmail') return legacyConnectGmailHandler(req, res);
