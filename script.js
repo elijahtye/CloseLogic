@@ -1,260 +1,82 @@
-// Reviews Carousel with Shuffle
-document.addEventListener('DOMContentLoaded', function() {
-    const reviewCards = Array.from(document.querySelectorAll('.review-card'));
-    const dots = document.querySelectorAll('.dot');
-    let reviewInterval;
-    let shuffledReviews = [];
-    let currentIndex = 0;
+/**
+ * CloseLogic Landing — Top-left reference recreation
+ * Output file: script.js
+ *
+ * Motion requirements:
+ * - Subtle parallax on mouse move (no aggressive motion)
+ * - Hover: charts gently lift (handled in CSS) + gold glow intensifies
+ * - Ambient float loop is CSS (6–8s)
+ */
 
-    // Shuffle array function (Fisher-Yates algorithm)
-    function shuffleArray(array) {
-        const shuffled = [...array];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        return shuffled;
-    }
+function prefersReducedMotion() {
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
-    // Initialize shuffled reviews
-    shuffledReviews = shuffleArray(reviewCards);
-    
-    // Function to show a specific review
-    function showReview(reviewCard) {
-        // Remove active class from all reviews
-        reviewCards.forEach(card => card.classList.remove('active'));
-        dots.forEach(dot => dot.classList.remove('active'));
+document.addEventListener('DOMContentLoaded', () => {
+  const frame = document.getElementById('holoFrame');
+  if (!frame) return;
 
-        // Add active class to current review
-        reviewCard.classList.add('active');
-        
-        // Find the original index for the dot
-        const originalIndex = reviewCards.indexOf(reviewCard);
-        if (originalIndex >= 0 && dots[originalIndex]) {
-            dots[originalIndex].classList.add('active');
-        }
-    }
+  if (prefersReducedMotion()) {
+    // Respect OS-level motion preference.
+    return;
+  }
 
-    // Function to show next review from shuffled deck
-    function nextReview() {
-        if (shuffledReviews.length === 0) {
-            // Reshuffle when we've gone through all reviews
-            shuffledReviews = shuffleArray(reviewCards);
-            currentIndex = 0;
-        }
-        
-        showReview(shuffledReviews[currentIndex]);
-        currentIndex = (currentIndex + 1) % shuffledReviews.length;
-        
-        // If we've shown all reviews, reshuffle
-        if (currentIndex === 0) {
-            shuffledReviews = shuffleArray(reviewCards);
-        }
-    }
+  let raf = 0;
 
-    // Auto-rotate reviews every 10 seconds (slowed down from 5 seconds)
-    function startAutoRotate() {
-        reviewInterval = setInterval(nextReview, 10000);
-    }
+  function setVarsFromPointer(clientX, clientY) {
+    const rect = frame.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (clientX - cx) / rect.width;  // -0.5..0.5-ish
+    const dy = (clientY - cy) / rect.height; // -0.5..0.5-ish
 
-    // Stop auto-rotate when user interacts
-    function stopAutoRotate() {
-        clearInterval(reviewInterval);
-    }
+    // Keep it extremely subtle
+    const maxPx = 6;     // translate in px
+    const maxRot = 1.2;  // rotate in degrees
 
-    // Add click event listeners to dots
-    dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
-            stopAutoRotate();
-            showReview(reviewCards[index]);
-            // Reshuffle and restart auto-rotate after 15 seconds
-            setTimeout(() => {
-                shuffledReviews = shuffleArray(reviewCards);
-                currentIndex = 0;
-                startAutoRotate();
-            }, 15000);
-        });
+    const px = Math.max(-maxPx, Math.min(maxPx, dx * maxPx * 2));
+    const py = Math.max(-maxPx, Math.min(maxPx, dy * maxPx * 2));
+    const rx = Math.max(-maxRot, Math.min(maxRot, -dy * maxRot * 2));
+    const ry = Math.max(-maxRot, Math.min(maxRot, dx * maxRot * 2));
+
+    frame.style.setProperty('--px', px.toFixed(2));
+    frame.style.setProperty('--py', py.toFixed(2));
+    frame.style.setProperty('--rx', rx.toFixed(2));
+    frame.style.setProperty('--ry', ry.toFixed(2));
+
+    // Gold glow origin (percentage)
+    const gx = ((clientX - rect.left) / rect.width) * 100;
+    const gy = ((clientY - rect.top) / rect.height) * 100;
+    frame.style.setProperty('--gx', `${gx.toFixed(1)}%`);
+    frame.style.setProperty('--gy', `${gy.toFixed(1)}%`);
+  }
+
+  function onMove(e) {
+    if (raf) return;
+    const { clientX, clientY } = e;
+    raf = window.requestAnimationFrame(() => {
+      raf = 0;
+      setVarsFromPointer(clientX, clientY);
     });
+  }
 
-    // Pause on hover
-    const reviewsContainer = document.querySelector('.reviews-container');
-    if (reviewsContainer) {
-        reviewsContainer.addEventListener('mouseenter', stopAutoRotate);
-        reviewsContainer.addEventListener('mouseleave', startAutoRotate);
-    }
+  function onEnter() {
+    frame.classList.add('is-hover');
+  }
 
-    // Show first review and start auto-rotation
-    if (shuffledReviews.length > 0) {
-        showReview(shuffledReviews[0]);
-        currentIndex = 1;
-    }
-    startAutoRotate();
+  function onLeave() {
+    frame.classList.remove('is-hover');
+    frame.style.setProperty('--px', '0');
+    frame.style.setProperty('--py', '0');
+    frame.style.setProperty('--rx', '0');
+    frame.style.setProperty('--ry', '0');
+    frame.style.setProperty('--gx', '50%');
+    frame.style.setProperty('--gy', '50%');
+  }
 
-    // Smooth scroll for navigation links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            if (href !== '#' && href !== '#login') {
-                e.preventDefault();
-                const target = document.querySelector(href);
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            }
-        });
-    });
-
-    // Add animation on scroll
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, observerOptions);
-
-    // Observe feature cards and scoring items
-    document.querySelectorAll('.feature-card, .scoring-item, .plan-card, .trend-card').forEach(el => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(20px)';
-        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(el);
-    });
-
-    // Draw Charts
-    function drawCharts() {
-        // Intent Distribution Chart (Doughnut/Pie)
-        const intentCanvas = document.getElementById('intentChart');
-        if (intentCanvas) {
-            const ctx = intentCanvas.getContext('2d');
-            const centerX = intentCanvas.width / 2;
-            const centerY = intentCanvas.height / 2;
-            const radius = 70;
-            
-            // High intent (68%)
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2 * 0.68);
-            ctx.lineTo(centerX, centerY);
-            ctx.fillStyle = '#D4AF37';
-            ctx.fill();
-            
-            // Medium intent (20%)
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, Math.PI * 2 * 0.68, Math.PI * 2 * 0.88);
-            ctx.lineTo(centerX, centerY);
-            ctx.fillStyle = '#FFA500';
-            ctx.fill();
-            
-            // Low intent (12%)
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, Math.PI * 2 * 0.88, Math.PI * 2);
-            ctx.lineTo(centerX, centerY);
-            ctx.fillStyle = '#E0E0E0';
-            ctx.fill();
-            
-            // Inner circle for doughnut effect
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius * 0.6, 0, Math.PI * 2);
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fill();
-        }
-
-        // Conversion Trend Chart (Line/Bar)
-        const conversionCanvas = document.getElementById('conversionChart');
-        if (conversionCanvas) {
-            const ctx = conversionCanvas.getContext('2d');
-            const width = conversionCanvas.width;
-            const height = conversionCanvas.height;
-            const padding = 20;
-            const chartWidth = width - padding * 2;
-            const chartHeight = height - padding * 2;
-            
-            // Draw grid lines
-            ctx.strokeStyle = '#F0F0F0';
-            ctx.lineWidth = 1;
-            for (let i = 0; i <= 4; i++) {
-                const y = padding + (chartHeight / 4) * i;
-                ctx.beginPath();
-                ctx.moveTo(padding, y);
-                ctx.lineTo(width - padding, y);
-                ctx.stroke();
-            }
-            
-            // Draw trend line
-            const dataPoints = [35, 42, 38, 48, 52, 58];
-            const maxValue = Math.max(...dataPoints);
-            const pointSpacing = chartWidth / (dataPoints.length - 1);
-            
-            ctx.strokeStyle = '#D4AF37';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            dataPoints.forEach((value, index) => {
-                const x = padding + pointSpacing * index;
-                const y = height - padding - (value / maxValue) * chartHeight;
-                if (index === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            });
-            ctx.stroke();
-            
-            // Draw points
-            ctx.fillStyle = '#D4AF37';
-            dataPoints.forEach((value, index) => {
-                const x = padding + pointSpacing * index;
-                const y = height - padding - (value / maxValue) * chartHeight;
-                ctx.beginPath();
-                ctx.arc(x, y, 4, 0, Math.PI * 2);
-                ctx.fill();
-            });
-        }
-
-        // Response Time Chart (Bar)
-        const responseCanvas = document.getElementById('responseChart');
-        if (responseCanvas) {
-            const ctx = responseCanvas.getContext('2d');
-            const width = responseCanvas.width;
-            const height = responseCanvas.height;
-            const padding = 20;
-            const chartWidth = width - padding * 2;
-            const chartHeight = height - padding * 2;
-            
-            // Draw bars
-            const bars = [
-                { label: 'CloseLogic', value: 2.1, color: '#D4AF37' },
-                { label: 'Industry Avg', value: 8.5, color: '#E0E0E0' }
-            ];
-            const maxValue = Math.max(...bars.map(b => b.value));
-            const barWidth = chartWidth / bars.length - 20;
-            
-            bars.forEach((bar, index) => {
-                const barHeight = (bar.value / maxValue) * chartHeight;
-                const x = padding + (chartWidth / bars.length) * index + 10;
-                const y = height - padding - barHeight;
-                
-                ctx.fillStyle = bar.color;
-                ctx.fillRect(x, y, barWidth, barHeight);
-                
-                // Add value label
-                ctx.fillStyle = '#333333';
-                ctx.font = '12px sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(bar.value + 'h', x + barWidth / 2, y - 5);
-            });
-        }
-    }
-
-    // Draw charts when page loads
-    setTimeout(drawCharts, 100);
+  frame.addEventListener('mousemove', onMove, { passive: true });
+  frame.addEventListener('mouseenter', onEnter);
+  frame.addEventListener('mouseleave', onLeave);
 });
+
 
