@@ -10,6 +10,31 @@ body {
     color: var(--text);
 }
 
+/* City skyline backdrop (dashboard) */
+.dashboard-main {
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-main::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: var(--city-skyline);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center bottom;
+    opacity: 0.18;
+    filter: saturate(0.9) contrast(1.08);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.dashboard-container {
+    position: relative;
+    z-index: 1;
+}
+
 /* Top bar */
 .top-bar {
     background: rgba(9, 12, 18, 0.72);
