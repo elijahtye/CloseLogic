@@ -7,20 +7,40 @@
 :root {
     --gold: #D4AF37;
     --gold-dark: #B8941F;
-    --gold-light: #F5E6D3;
+    --gold-light: rgba(212, 175, 55, 0.22);
     --white: #FFFFFF;
-    --gray-light: #F5F5F5;
-    --gray: #E0E0E0;
-    --gray-dark: #666666;
-    --text-dark: #333333;
-    --text-light: #999999;
+
+    /* Legacy tokens mapped to luxury theme (keeps old pages readable) */
+    --gray-light: rgba(255, 255, 255, 0.06);
+    --gray: rgba(255, 255, 255, 0.10);
+    --gray-dark: rgba(255, 255, 255, 0.62);
+    --text-dark: rgba(255, 255, 255, 0.92);
+    --text-light: rgba(255, 255, 255, 0.55);
+
+    /* Luxury theme (dark + gold) */
+    --bg: #070A0F;
+    --bg-elevated: #0B0F16;
+    --surface: rgba(255, 255, 255, 0.06);
+    --surface-2: rgba(255, 255, 255, 0.08);
+    --surface-solid: #0E1420;
+    --border: rgba(255, 255, 255, 0.12);
+    --border-strong: rgba(212, 175, 55, 0.22);
+    --text: rgba(255, 255, 255, 0.92);
+    --text-strong: #ffffff;
+    --muted: rgba(255, 255, 255, 0.64);
+    --shadow-lg: 0 18px 55px rgba(0, 0, 0, 0.45);
+    --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.35);
+    --radius: 14px;
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    color: var(--text-dark);
+    color: var(--text);
     line-height: 1.6;
-    background-color: var(--white);
+    background:
+        radial-gradient(1200px circle at 18% 10%, rgba(212, 175, 55, 0.14), transparent 55%),
+        radial-gradient(900px circle at 80% 0%, rgba(255, 255, 255, 0.06), transparent 55%),
+        linear-gradient(180deg, #0B1020 0%, var(--bg) 55%, #06080D 100%);
 }
 
 .container {
@@ -31,9 +51,11 @@ body {
 
 /* Header */
 .header {
-    background: var(--white);
+    background: rgba(9, 12, 18, 0.72);
     padding: 20px 0;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -61,7 +83,7 @@ body {
 }
 
 .logo-text {
-    color: var(--text-dark);
+    color: var(--text-strong);
 }
 
 /* Tier-gated UI (locked feature overlay) */
@@ -126,7 +148,7 @@ body {
 
 .nav a {
     text-decoration: none;
-    color: var(--text-dark);
+    color: var(--muted);
     font-weight: 500;
     transition: color 0.3s;
 }
@@ -143,14 +165,14 @@ body {
 
 .login-link {
     text-decoration: none;
-    color: var(--text-dark);
+    color: var(--muted);
     font-weight: 500;
 }
 
 .btn {
     padding: 12px 24px;
     border: none;
-    border-radius: 6px;
+    border-radius: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s;
@@ -159,7 +181,7 @@ body {
 
 .btn-primary {
     background: var(--gold);
-    color: var(--white);
+    color: #0B0F16;
 }
 
 .btn-primary:hover {
@@ -170,13 +192,14 @@ body {
 
 .btn-outline {
     background: transparent;
-    color: var(--gold);
-    border: 2px solid var(--gold);
+    color: var(--text-strong);
+    border: 1px solid var(--border-strong);
 }
 
 .btn-outline:hover {
-    background: var(--gold);
-    color: var(--white);
+    background: rgba(212, 175, 55, 0.12);
+    border-color: rgba(212, 175, 55, 0.35);
+    color: var(--text-strong);
 }
 
 .btn-large {
@@ -187,7 +210,13 @@ body {
 /* Hero Section */
 .hero {
     padding: 80px 0;
-    background: linear-gradient(to bottom, var(--white), var(--gray-light));
+    background:
+        radial-gradient(900px circle at 10% 20%, rgba(212, 175, 55, 0.16), transparent 55%),
+        radial-gradient(800px circle at 85% 15%, rgba(255, 255, 255, 0.05), transparent 50%),
+        linear-gradient(180deg, rgba(7, 10, 15, 0.3), rgba(7, 10, 15, 0.9));
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
 }
 
 .hero-content {
@@ -207,14 +236,14 @@ body {
     font-weight: 700;
     margin-bottom: 24px;
     line-height: 1.2;
-    color: var(--text-dark);
+    color: var(--text-strong);
     position: relative;
     z-index: 2;
 }
 
 .hero-text p {
     font-size: 18px;
-    color: var(--gray-dark);
+    color: var(--muted);
     margin-bottom: 32px;
     line-height: 1.8;
     position: relative;
@@ -274,9 +303,10 @@ body {
 }
 
 .dashboard-preview {
-    background: var(--white);
-    border-radius: 12px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border-radius: var(--radius);
+    border: 1px solid var(--border-strong);
+    box-shadow: var(--shadow-lg);
     padding: 24px;
     width: 100%;
     max-width: 500px;
@@ -287,13 +317,13 @@ body {
 .dashboard-header {
     margin-bottom: 20px;
     padding-bottom: 16px;
-    border-bottom: 2px solid var(--gray-light);
+    border-bottom: 1px solid var(--border);
 }
 
 .dashboard-header h3 {
     font-size: 20px;
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--text-strong);
 }
 
 .lead-list {
@@ -307,7 +337,7 @@ body {
     padding: 16px;
     border-radius: 8px;
     margin-bottom: 12px;
-    background: var(--gray-light);
+    background: rgba(255, 255, 255, 0.06);
     transition: transform 0.2s;
 }
 
@@ -329,13 +359,13 @@ body {
 
 .lead-name {
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--text-strong);
     margin-bottom: 4px;
 }
 
 .lead-details {
     font-size: 14px;
-    color: var(--gray-dark);
+    color: var(--muted);
 }
 
 .lead-intent {
@@ -374,20 +404,20 @@ body {
 }
 
 .stat-card {
-    background: var(--gray-light);
+    background: rgba(255, 255, 255, 0.06);
     padding: 16px;
     border-radius: 8px;
 }
 
 .stat-card h4 {
     font-size: 14px;
-    color: var(--gray-dark);
+    color: var(--muted);
     margin-bottom: 8px;
 }
 
 .stat-bar {
     height: 8px;
-    background: var(--gray);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 4px;
     overflow: hidden;
     margin-bottom: 8px;
@@ -402,18 +432,18 @@ body {
 .stat-number {
     font-size: 24px;
     font-weight: bold;
-    color: var(--text-dark);
+    color: var(--text-strong);
 }
 
 .stat-label {
     font-size: 12px;
-    color: var(--gray-dark);
+    color: var(--muted);
 }
 
 /* Features Section */
 .features {
     padding: 80px 0;
-    background: var(--white);
+    background: transparent;
 }
 
 .section-title {
@@ -421,7 +451,7 @@ body {
     font-size: 36px;
     font-weight: 700;
     margin-bottom: 60px;
-    color: var(--text-dark);
+    color: var(--text-strong);
 }
 
 .features-grid {
@@ -435,11 +465,14 @@ body {
     padding: 40px 24px;
     border-radius: 12px;
     transition: transform 0.3s, box-shadow 0.3s;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
 }
 
 .feature-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-strong);
 }
 
 .feature-icon {
@@ -452,10 +485,6 @@ body {
     color: var(--gold);
 }
 
-.feature-card:nth-child(2) .feature-icon {
-    color: var(--gray-dark);
-}
-
 .feature-icon svg {
     width: 100%;
     height: 100%;
@@ -465,18 +494,18 @@ body {
     font-size: 24px;
     font-weight: 600;
     margin-bottom: 16px;
-    color: var(--text-dark);
+    color: var(--text-strong);
 }
 
 .feature-card p {
-    color: var(--gray-dark);
+    color: var(--muted);
     line-height: 1.8;
 }
 
 /* Trends & Analytics Section */
 .trends {
     padding: 80px 0;
-    background: var(--gray-light);
+    background: transparent;
 }
 
 .trends-grid {
@@ -486,23 +515,25 @@ body {
 }
 
 .trend-card {
-    background: var(--white);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
     border-radius: 12px;
     padding: 30px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .trend-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-strong);
 }
 
 .trend-card h3 {
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 20px;
-    color: var(--text-dark);
+    color: var(--text-strong);
     text-align: center;
 }
 
@@ -526,7 +557,7 @@ body {
 /* How It Works Section */
 .how-it-works {
     padding: 80px 0;
-    background: var(--gray-light);
+    background: transparent;
 }
 
 .scoring-grid {
@@ -538,7 +569,8 @@ body {
 .scoring-item {
     text-align: center;
     padding: 30px 20px;
-    background: var(--white);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
     border-radius: 12px;
     transition: transform 0.3s;
 }
@@ -565,18 +597,18 @@ body {
     font-size: 20px;
     font-weight: 600;
     margin-bottom: 12px;
-    color: var(--text-dark);
+    color: var(--text-strong);
 }
 
 .scoring-item p {
-    color: var(--gray-dark);
+    color: var(--muted);
     line-height: 1.6;
 }
 
 /* Reviews Section */
 .reviews {
     padding: 80px 0;
-    background: var(--white);
+    background: transparent;
 }
 
 .reviews-container {
@@ -589,7 +621,8 @@ body {
 .review-card {
     display: none;
     padding: 40px;
-    background: var(--gray-light);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
     border-radius: 12px;
     text-align: center;
     animation: fadeIn 0.5s;
@@ -619,7 +652,7 @@ body {
 .review-text {
     font-size: 18px;
     line-height: 1.8;
-    color: var(--text-dark);
+    color: var(--text);
     margin-bottom: 30px;
     font-style: italic;
 }
@@ -640,13 +673,13 @@ body {
 
 .review-name {
     font-weight: 600;
-    color: var(--text-dark);
+    color: var(--text-strong);
     margin-bottom: 4px;
 }
 
 .review-title {
     font-size: 14px;
-    color: var(--gray-dark);
+    color: var(--muted);
 }
 
 .review-dots {
@@ -779,9 +812,10 @@ body {
 
 /* Footer */
 .footer {
-    background: var(--text-dark);
-    color: var(--white);
+    background: rgba(6, 8, 13, 0.9);
+    color: var(--text);
     padding: 60px 0 30px;
+    border-top: 1px solid var(--border);
 }
 
 .footer-content {
@@ -805,7 +839,7 @@ body {
 
 .footer-column a {
     display: block;
-    color: var(--gray);
+    color: rgba(255, 255, 255, 0.62);
     text-decoration: none;
     margin-bottom: 12px;
     transition: color 0.3s;
@@ -824,7 +858,7 @@ body {
 }
 
 .footer-copyright p {
-    color: var(--gray);
+    color: rgba(255, 255, 255, 0.55);
 }
 
 .footer-social {
@@ -836,7 +870,7 @@ body {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    background: var(--gray-dark);
+    background: rgba(255, 255, 255, 0.12);
     cursor: pointer;
     transition: background 0.3s;
 }

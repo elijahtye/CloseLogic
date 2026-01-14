@@ -1,5 +1,193 @@
 /* Dashboard Styles - Premium Analytics-First CRM UI */
 
+/* =========================================================
+   Luxury theme alignment (dark + gold) — overrides only
+   Keeps layout/spacing intact while matching marketing site
+   ========================================================= */
+
+body {
+    background: var(--bg);
+    color: var(--text);
+}
+
+/* Top bar */
+.top-bar {
+    background: rgba(9, 12, 18, 0.72);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 18px rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(10px);
+}
+
+.dashboard-logo,
+.page-title {
+    color: var(--text-strong);
+}
+
+/* Buttons / controls */
+.date-range-selector {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+}
+
+.date-range-btn {
+    color: var(--muted);
+}
+
+.date-range-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-strong);
+}
+
+.date-range-btn.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-strong);
+    box-shadow: none;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.user-menu-btn {
+    border-color: var(--border);
+}
+
+.user-menu-btn:hover {
+    border-color: var(--border-strong);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.user-menu-dropdown {
+    background: var(--bg-elevated);
+    border-color: var(--border);
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.45);
+}
+
+.user-menu-item {
+    color: var(--text);
+}
+
+.user-menu-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.user-menu-divider {
+    border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Main surfaces */
+.executive-overview,
+.kpi-card,
+.chart-card,
+.pipeline-panel,
+.intelligence-panel,
+.lead-detail-card,
+.table-card,
+.modal {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+    border: 1px solid var(--border);
+    box-shadow: 0 18px 55px rgba(0, 0, 0, 0.35);
+}
+
+.executive-overview {
+    border-color: rgba(212, 175, 55, 0.18);
+}
+
+/* Text */
+.kpi-label,
+.kpi-unit,
+.chart-subtitle,
+.lead-meta,
+.lead-subtitle,
+.modal-help,
+.automation-help,
+.modal-notes {
+    color: var(--muted) !important;
+}
+
+.kpi-value,
+.chart-header h3,
+.modal-header h3,
+.automation-section-title {
+    color: var(--text-strong) !important;
+}
+
+/* Tables / lists */
+.lead-row:hover,
+.lead-item:hover,
+.lead-list-item:hover {
+    background: rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Modals */
+.modal-overlay {
+    background: rgba(0, 0, 0, 0.72) !important;
+}
+
+.modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.modal-actions {
+    border-top-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.modal-field input,
+.modal-field textarea,
+.modal-field select,
+.automation-controls input[type="number"],
+.action-item-create input,
+.action-item-create select {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.12) !important;
+    color: var(--text-strong) !important;
+}
+
+.modal-field label,
+.automation-controls label {
+    color: var(--text) !important;
+}
+
+.modal-close {
+    color: var(--muted) !important;
+}
+
+.modal-close:hover {
+    color: var(--text-strong) !important;
+}
+
+/* Auto Sync */
+.auto-sync-wrap {
+    border-color: var(--border) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.auto-sync-label {
+    color: var(--text-strong) !important;
+}
+
+.toggle-switch {
+    border-color: rgba(255, 255, 255, 0.14) !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+}
+
+.toggle-switch .toggle-thumb {
+    background: rgba(255, 255, 255, 0.90) !important;
+}
+
+/* Automations tabs */
+.automations-tabs {
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-color: rgba(255, 255, 255, 0.10) !important;
+}
+
+.automation-tab {
+    color: var(--muted) !important;
+}
+
+.automation-tab.active {
+    background: rgba(212, 175, 55, 0.14) !important;
+    color: var(--text-strong) !important;
+    border: 1px solid rgba(212, 175, 55, 0.25) !important;
+}
+
 body {
     background: #fafafa;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;

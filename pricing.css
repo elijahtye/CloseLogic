@@ -1,7 +1,9 @@
 /* Pricing Page */
 .pricing-page {
     padding: 100px 0;
-    background: linear-gradient(to bottom, var(--white), var(--gray-light));
+    background:
+        radial-gradient(900px circle at 20% 10%, rgba(212, 175, 55, 0.12), transparent 55%),
+        linear-gradient(180deg, rgba(7, 10, 15, 0.25), rgba(7, 10, 15, 0.92));
     min-height: calc(100vh - 200px);
 }
 
@@ -14,12 +16,12 @@
     font-size: 48px;
     font-weight: 700;
     margin-bottom: 16px;
-    color: var(--text-dark);
+    color: var(--text-strong);
 }
 
 .pricing-header p {
     font-size: 18px;
-    color: var(--gray-dark);
+    color: var(--muted);
     max-width: 600px;
     margin: 0 auto;
 }
