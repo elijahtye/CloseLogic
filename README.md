@@ -1,14 +1,13 @@
 # CloseLogic
 
-A premium analytics-first CRM for real estate agents with AI-powered lead analysis.
+A premium analytics-first platform for brokerages with AI-powered lead analysis and operational visibility.
 
 ## Features
 
-- 🔐 **Supabase Authentication** - Google OAuth sign-in
-- 📊 **Analytics Dashboard** - KPI cards, charts, and pipeline visualization
-- 🤖 **AI Lead Analysis** - Automatic OpenAI-powered lead scoring
-- 📧 **Lead Intelligence** - Deal probability, engagement timeline, recommended actions
-- 🎯 **Pipeline Management** - Hot/Warm/Cold lead categorization
+- 🔐 **Supabase Authentication** - Sign-in only (invite-only accounts)
+- 📊 **Analytics Dashboard** - KPI cards, charts, pipeline visibility
+- 🤖 **AI Lead Analysis** - Automatic lead scoring + next steps
+- 🎯 **Lead Intelligence** - Intent, urgency, confidence, deal probability
 
 ## Tech Stack
 
@@ -56,17 +55,9 @@ git push -u origin main
    - **anon/public key**
    - **service_role key** (keep this secret!)
 
-4. Run the SQL migrations in order:
-   - `supabase_schema.sql` - Creates tables and initial RLS
-   - `supabase_rls_production_fix.sql` - Removes seed data, adds FK constraints
-   - `supabase_rls_security_patch.sql` - Fixes security gaps
-   - `supabase_rls_profiles_hardening.sql` - Final RLS hardening
-
-5. Enable Google OAuth:
-   - Go to **Authentication** > **Providers** > **Google**
-   - Enable Google provider
-   - Add your Google OAuth credentials
-   - Add redirect URL: `https://your-vercel-app.vercel.app/dashboard.html`
+4. Run the Supabase migrations in `supabase/migrations/` (in order).
+   - Recommended: use the Supabase CLI migration workflow
+   - Or: copy/paste each migration into the Supabase SQL editor and run sequentially
 
 ### 3. Deploy to Vercel
 
@@ -136,12 +127,12 @@ window.SUPABASE_CONFIG = {
 
 **Important**: For production, consider using environment variables or a secure config endpoint instead of hardcoding in `config.js`.
 
-### 5. Update Supabase Redirect URLs
+### 5. Update Supabase Redirect URLs (Production)
 
 In Supabase Dashboard > **Authentication** > **URL Configuration**:
 
 Add your production URL:
-- `https://your-app.vercel.app/dashboard.html`
+- `https://your-app.vercel.app/dashboard`
 - `https://your-app.vercel.app/auth.html`
 
 ## Project Structure
@@ -244,7 +235,7 @@ npm run dev:local
 npm run dev:restart
 
 # STEP 2: Open the frontend in your browser
-# Navigate to: http://localhost:5001/dashboard.html
+# Navigate to: http://localhost:5001/dashboard
 # The frontend will automatically detect the API server at the same origin
 
 # If you need to use a different API server URL (e.g., separate frontend/backend):
@@ -254,18 +245,17 @@ npm run dev:restart
 
 ### Testing
 
-1. Sign up/login with Google OAuth
-2. Complete onboarding flow
+1. Sign in to an existing account (accounts are invite-only)
+2. Complete onboarding (if required)
 3. View dashboard (loads leads/messages from Supabase)
-4. When inbound messages are created via `/api/messages`, analysis runs automatically (server-side)
-5. Check dashboard for updated scores and recommendations
+4. Trigger lead analysis and confirm scores/recommendations update
 
 ## Troubleshooting
 
 ### Authentication Issues
 - Verify `config.js` has correct Supabase URL and anon key
 - Check Supabase redirect URLs include your Vercel domain
-- Ensure Google OAuth is enabled in Supabase
+- Confirm the user exists in Supabase Auth and has access to the corresponding data
 
 ### API Errors
 - Check Vercel function logs in dashboard

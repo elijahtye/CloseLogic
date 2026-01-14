@@ -1,10 +1,8 @@
 -- Migration: Commission settings + earnings estimates
 -- Adds:
---  - profiles.commission_rate (decimal, e.g. 0.03 = 3%)
+--  - profiles.commission_rate (numeric, e.g. 0.03 = 3%)
 --  - profiles.auto_analyze_leads (boolean)
 --  - leads.estimated_earnings (integer, USD)
---
--- Run in Supabase SQL editor.
 
 DO $$
 BEGIN
@@ -15,7 +13,6 @@ BEGIN
   ) THEN
     ALTER TABLE public.profiles
       ADD COLUMN commission_rate NUMERIC;
-    RAISE NOTICE 'Added profiles.commission_rate';
   END IF;
 
   -- profiles.auto_analyze_leads
@@ -25,7 +22,6 @@ BEGIN
   ) THEN
     ALTER TABLE public.profiles
       ADD COLUMN auto_analyze_leads BOOLEAN DEFAULT FALSE;
-    RAISE NOTICE 'Added profiles.auto_analyze_leads';
   END IF;
 
   -- leads.estimated_earnings
@@ -35,7 +31,6 @@ BEGIN
   ) THEN
     ALTER TABLE public.leads
       ADD COLUMN estimated_earnings INTEGER;
-    RAISE NOTICE 'Added leads.estimated_earnings';
   END IF;
 END $$;
 
@@ -55,7 +50,6 @@ BEGIN
     ALTER TABLE public.profiles
       ADD CONSTRAINT profiles_commission_rate_check
       CHECK (commission_rate IS NULL OR (commission_rate >= 0 AND commission_rate <= 0.20));
-    RAISE NOTICE 'Added profiles_commission_rate_check';
   END IF;
 
   IF NOT EXISTS (
@@ -65,7 +59,6 @@ BEGIN
     ALTER TABLE public.leads
       ADD CONSTRAINT leads_estimated_earnings_check
       CHECK (estimated_earnings IS NULL OR estimated_earnings >= 0);
-    RAISE NOTICE 'Added leads_estimated_earnings_check';
   END IF;
 END $$;
 
