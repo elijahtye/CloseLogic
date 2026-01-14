@@ -23,7 +23,7 @@
             </nav>
             <div class="header-actions">
                 <a href="/auth" class="login-link">Login</a>
-                <a href="/auth" class="btn btn-primary">Get Started</a>
+                <a href="#book" class="btn btn-primary">Book a Product Demo</a>
             </div>
         </div>
     </header>
@@ -32,111 +32,44 @@
     <section class="pricing-page">
         <div class="container">
             <div class="pricing-header">
-                <h1>Simple, Transparent Pricing</h1>
-                <p>Choose the plan that's right for your real estate business. All plans include a 14-day free trial.</p>
+                <h1>Book a Product Demo</h1>
+                <p>We’re in demo-first mode while we roll out the next version of CloseLogic. Book a walkthrough and we’ll show you exactly how it works.</p>
             </div>
 
-            <div class="pricing-tiers">
-                <!-- Viewer Tier -->
-                <div class="tier-card">
-                    <div class="tier-header">
-                        <h3 class="tier-name">Viewer</h3>
-                        <div class="tier-price">
-                            <span class="price-amount">$0</span>
-                            <span class="price-period">/month</span>
-                        </div>
-                        <p class="tier-description">Perfect for getting started with lead scoring</p>
+            <div class="pricing-tiers" id="book" style="grid-template-columns: 1fr; max-width: 720px;">
+                <div class="tier-card featured" style="transform: none;">
+                    <div class="tier-header" style="text-align: left;">
+                        <h3 class="tier-name" style="text-align:left;">What you’ll see on the demo</h3>
+                        <p class="tier-description" style="text-align:left; margin-top: 8px;">
+                            A guided walkthrough of CloseLogic’s dashboard, lead scoring, pipeline value, and automation workflows—tailored to your market.
+                        </p>
                     </div>
                     <div class="tier-features">
-                        <ul class="feature-list" data-plan="viewer"></ul>
+                        <ul class="feature-list" style="margin-top: 0;">
+                            <li class="feature-item">
+                                <span style="font-weight:600; color: var(--gold);">•</span>
+                                <span>How leads are scored and prioritized</span>
+                            </li>
+                            <li class="feature-item">
+                                <span style="font-weight:600; color: var(--gold);">•</span>
+                                <span>Pipeline value + estimated earnings (if enabled)</span>
+                            </li>
+                            <li class="feature-item">
+                                <span style="font-weight:600; color: var(--gold);">•</span>
+                                <span>Workflows for follow-ups and reminders</span>
+                            </li>
+                            <li class="feature-item">
+                                <span style="font-weight:600; color: var(--gold);">•</span>
+                                <span>Q&A and next steps</span>
+                            </li>
+                        </ul>
                     </div>
-                    <button class="btn btn-outline btn-full" data-tier="viewer" data-price="0">Get Started Free</button>
-                </div>
-
-                <!-- Agent Tier -->
-                <div class="tier-card featured">
-                    <div class="tier-badge">Most Popular</div>
-                    <div class="tier-header">
-                        <h3 class="tier-name">Agent</h3>
-                        <div class="tier-price">
-                            <span class="price-amount">$39</span>
-                            <span class="price-period">/month</span>
-                        </div>
-                        <p class="tier-description">Everything you need to close more deals</p>
+                    <a class="btn btn-primary btn-full" href="mailto:demo@closelogic.net?subject=CloseLogic%20Demo%20Request">Book a Product Demo</a>
+                    <div style="margin-top: 14px; color: var(--gray-dark); font-size: 14px;">
+                        Prefer email? <a href="mailto:demo@closelogic.net">demo@closelogic.net</a>
                     </div>
-                    <div class="tier-features">
-                        <ul class="feature-list" data-plan="agent"></ul>
-                    </div>
-                    <button class="btn btn-primary btn-full" data-tier="agent" data-price="39">Start Free Trial</button>
-                </div>
-
-                <!-- Broker Tier -->
-                <div class="tier-card">
-                    <div class="tier-header">
-                        <h3 class="tier-name">Broker</h3>
-                        <div class="tier-price">
-                            <span class="price-amount">$79</span>
-                            <span class="price-period">/month</span>
-                        </div>
-                        <p class="tier-description">Advanced automation and multi-inbox scaling</p>
-                    </div>
-                    <div class="tier-features">
-                        <ul class="feature-list" data-plan="broker"></ul>
-                    </div>
-                    <button class="btn btn-primary btn-full" data-tier="broker" data-price="79">Upgrade to Broker</button>
                 </div>
             </div>
-
-            <!-- Tier Configuration (for future Stripe integration) -->
-            <script type="application/json" id="tier-config">
-            {
-                "tiers": [
-                    {
-                        "id": "viewer",
-                        "name": "Viewer",
-                        "price": 0,
-                        "stripePriceId": null,
-                        "features": [
-                            "Gmail sync (manual)",
-                            "AI lead scoring (1–100)",
-                            "Deal probability + lead classification",
-                            "Connect 1 Gmail inbox"
-                        ],
-                        "limitations": [
-                            "No AI-generated reply drafts",
-                            "No automations (action items / reminders)",
-                            "No auto reply"
-                        ]
-                    },
-                    {
-                        "id": "agent",
-                        "name": "Agent",
-                        "price": 39,
-                        "stripePriceId": null,
-                        "features": [
-                            "Unlimited lead scoring",
-                            "Advanced lead intent & engagement analysis",
-                            "AI-generated follow-up email drafts",
-                            "Lead confidence scoring (low / medium / high)",
-                            "Re-score leads on demand",
-                            "Lead filtering (hot / warm / cold)",
-                            "Email thread insights"
-                        ]
-                    },
-                    {
-                        "id": "broker",
-                        "name": "Broker",
-                        "price": 79,
-                        "stripePriceId": null,
-                        "features": [
-                            "Everything in Agent",
-                            "Auto Reply automation",
-                            "Connect up to 5 Gmail inboxes"
-                        ]
-                    }
-                ]
-            }
-            </script>
         </div>
     </section>
 
@@ -180,8 +113,7 @@
         </div>
     </footer>
 
-    <script src="planFeatures.js"></script>
-    <script src="pricing.js"></script>
+    <!-- Pricing page is now demo-first; no tiers or checkout scripts needed -->
 </body>
 </html>
 
